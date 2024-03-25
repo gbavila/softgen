@@ -1,1 +1,2 @@
-# softgen
+# SoftGen
+Projeto Final de Graduação
