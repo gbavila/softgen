@@ -1,3 +1,5 @@
 back/.env
 __pycache__/
 back/softgen-django/db.sqlite3
+front/
+requirements.txt
