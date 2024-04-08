@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.views import APIView
@@ -40,11 +40,29 @@ def addCode(request):
 
 class SubmitSpecsView(APIView):
     def get(self, request, *args, **kwargs):
-        return render(request, 'code_generator/spec_form.html')
+        return render(request, 'spec_form.html')
     
     def post(self, request, *args, **kwargs):
         serializer = SoftwareSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            software = serializer.save()
+
+            preview_content = "PREVIEW DO SOFTWARE"
+            # Armazenar response_content na sessão
+            request.session['preview_content'] = preview_content
+
+            return redirect(f'/preview?software_id={software.id}')
+            #return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class PreviewView(APIView):
+    def get(self, request, *args, **kwargs):
+        software_id = request.query_params.get('software_id')
+        software = Software.objects.get(pk=software_id)
+
+        preview_content = request.session.get('preview_content', 'Preview não disponível.')
+        # limpar o preview_content da sessão após o uso
+        request.session.pop('preview_content', None)
+
+        return render(request, 'preview.html', {'software': software, 'preview_content': preview_content})
+    

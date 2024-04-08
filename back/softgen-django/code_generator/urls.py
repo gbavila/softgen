@@ -7,4 +7,5 @@ urlpatterns = [
     path('', views.getCode, name="getCode"),
     path('add/', views.addCode),
     path('submit/', views.SubmitSpecsView.as_view(), name='submit_specs'),
+    path('preview/', views.PreviewView.as_view(), name='preview'),
 ]

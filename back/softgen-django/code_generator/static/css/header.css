@@ -1,0 +1,12 @@
+header {
+    background-color: #007bff;
+    color: #ffffff;
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+header h2 {
+    font-size: 34px; /* Aumenta a fonte do título da aplicação */
+    margin: 0;
+}

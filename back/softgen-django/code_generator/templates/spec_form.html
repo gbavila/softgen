@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Software Generator</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/spec_form.css' %}">
+</head>
+<body>
+    <header>
+        <h2>Software Generator</h2>
+    </header>
+    <div class="form-container">
+        <h1>Enviar Especificações</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="name">Nome do Software:</label><br>
+            <input type="text" id="name" name="name" required><br>
+            <label for="specs">Especificações:</label><br>
+            <textarea id="specs" name="specs" required></textarea><br>
+            <input type="submit" value="Enviar">
+        </form>
+    </div>
+</body>
+</html>
