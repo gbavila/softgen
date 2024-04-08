@@ -1,10 +1,11 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Technology, Code
-from .serializers import TechnologySerializer, CodeSerializer
+from .models import Software, File
+from .serializers import SoftwareSerializer, FileSerializer
 from .services.openai import openai_client
 
 def index(request):
@@ -22,17 +23,28 @@ class Playground(APIView):
 
 @api_view(['GET'])
 def getCode(request):
-    code = Code.objects.all()
-    serializer = CodeSerializer(code, many=True)
+    file = File.objects.all()
+    serializer = FileSerializer(file, many=True)
     return Response(serializer.data)
     # person = {'name': 'Dennis', 'age': 28}
     # return Response(person)
 
 @api_view(['POST'])
 def addCode(request):
-    serializer = CodeSerializer(data=request.data)
+    serializer = FileSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
     else:
         print("Failed")
     return Response(serializer.data)
+
+class SubmitSpecsView(APIView):
+    def get(self, request, *args, **kwargs):
+        return render(request, 'code_generator/spec_form.html')
+    
+    def post(self, request, *args, **kwargs):
+        serializer = SoftwareSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

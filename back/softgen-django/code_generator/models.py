@@ -2,21 +2,21 @@ import datetime
 from django.db import models
 from django.utils import timezone
 
-# Create your models here.
-class Technology(models.Model):
-    name = models.CharField(max_length=100)
+class Software(models.Model):
+    name = models.CharField(max_length=255)
+    creation_date = models.DateTimeField(auto_now_add=True)
+    specs = models.TextField()
+    processed_specs = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.name
 
-class Code(models.Model):
-    code_text = models.CharField(max_length=20000)
-    code_path = models.CharField(max_length=200)
-    release_date = models.DateTimeField(auto_now_add=True)
-    technology = models.ForeignKey(Technology, on_delete=models.CASCADE)
+class File(models.Model):
+    software = models.ForeignKey(Software, on_delete=models.CASCADE, related_name='files') 
+    # related_name='files' permite acessar todos os arquivos de um software usando software.files
+    path = models.CharField(max_length=255)
+    version = models.IntegerField()
+    content = models.TextField()
 
     def __str__(self):
-        return self.code_text
-    
-    def was_published_recently(self):
-        return self.release_date >= timezone.now() - datetime.timedelta(days=1)
+        return f"{self.path} (Versão {self.version})"

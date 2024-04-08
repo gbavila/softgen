@@ -1,13 +1,14 @@
-from .models import Technology, Code
+from .models import Software, File
 from rest_framework import serializers
 
-class TechnologySerializer(serializers.ModelSerializer):
+class SoftwareSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Technology
-        fields = '__all__'#['url', 'Technologyname', 'email', 'groups']
+        model = Software
+        fields = '__all__'#['url', 'name', 'email', 'groups']
+        extra_kwargs = {'processed_specs': {'required': False}}
 
 
-class CodeSerializer(serializers.ModelSerializer):
+class FileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Code
+        model = File
         fields = '__all__'

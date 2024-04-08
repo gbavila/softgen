@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Software Generator</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: #007bff;
+            color: #ffffff;
+            width: 100%;
+            padding: 20px 0;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        header h2 {
+            font-size: 34px; /* Aumenta a fonte do título da aplicação */
+            margin: 0;
+        }
+        .form-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: #f4f4f4;
+        }
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px; /* Espaço entre o título e os inputs */
+        }
+        label {
+            color: #666;
+            font-size: 14px;
+        }
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0 20px 0;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 350px; /* Aumenta o tamanho da caixa de input das especificações */
+        }
+        input[type="submit"] {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>Software Generator</h2>
+    </header>
+    <div class="form-container">
+        <h1>Enviar Especificações</h1>
+        <form method="post">
+            {% csrf_token %}
+            <label for="name">Nome do Software:</label><br>
+            <input type="text" id="name" name="name" required><br>
+            <label for="specs">Especificações:</label><br>
+            <textarea id="specs" name="specs" required></textarea><br>
+            <input type="submit" value="Enviar">
+        </form>
+    </div>
+</body>
+</html>
