@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.conf import settings
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
@@ -15,12 +16,12 @@ class Playground(APIView):
     def get(self, request, *args, **kwargs):
         # if not prompt:
         #     return Response({"error": "O prompt é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
-        assistant = openai_client.assistant()
-        assistant.create(
-            name="Software Generator",
-            instructions="You are a software engineer. Write and run working code to meet given specifications.",
-            model="gpt-3.5-turbo-0125"
-        )
+        assistant = openai_client.assistant(settings.ASSISTANT_ID)
+        # assistant.create(
+        #     name="Software Generator",
+        #     instructions="You are a software engineer. Write and run working code to meet given specifications.",
+        #     model="gpt-3.5-turbo-0125"
+        # )
         assistant.send_message(
             prompt="What is your name?"
         )
