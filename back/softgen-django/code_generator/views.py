@@ -15,27 +15,23 @@ class Playground(APIView):
     def get(self, request, *args, **kwargs):
         # if not prompt:
         #     return Response({"error": "O prompt é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        prompt = "How much is 1+1?"
-        generated_text = openai_client.generate_text(prompt, max_tokens=50)
-        
-        return Response({"text": generated_text})
+        assistant = openai_client.assistant()
+        assistant.create(
+            name="Software Generator",
+            instructions="You are a software engineer. Write and run working code to meet given specifications.",
+            model="gpt-3.5-turbo-0125"
+        )
+        assistant.send_message(
+            prompt="What is your name?"
+        )
+        response = assistant.wait_for_run_completion()
+
+        return Response({"text": response})
 
 @api_view(['GET'])
-def getCode(request):
+def getFiles(request):
     file = File.objects.all()
     serializer = FileSerializer(file, many=True)
-    return Response(serializer.data)
-    # person = {'name': 'Dennis', 'age': 28}
-    # return Response(person)
-
-@api_view(['POST'])
-def addCode(request):
-    serializer = FileSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-    else:
-        print("Failed")
     return Response(serializer.data)
 
 class SubmitSpecsView(APIView):
