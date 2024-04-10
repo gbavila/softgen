@@ -37,19 +37,23 @@ class OpenAIClient:
             self.assistant_id = self.assistant.id
             print(f"Assistant ID: {self.assistant.id}")
                 
-        def send_message(self, prompt, instructions=""):
-            if not hasattr(self, 'thread') or self.thread is None:
+        def send_message(self, prompt, instructions="", thread_id=None):
+            if (not hasattr(self, 'thread_id') or self.thread_id is None) and thread_id is None:
                 self.thread = self.client.beta.threads.create()
+                self.thread_id = self.thread.id
                 print(f"Thread criada: id = {self.thread.id}")
+            else:
+                self.thread_id = thread_id
+                print(f"Thread existente utilizada: {self.thread_id}")
 
             message = self.client.beta.threads.messages.create(
-                    thread_id=self.thread.id,
+                    thread_id=self.thread_id,
                     role="user",
                     content=prompt
                 )
             
             self.current_run = self.client.beta.threads.runs.create(
-                    thread_id=self.thread.id,
+                    thread_id=self.thread_id,
                     assistant_id=self.assistant_id,
                     #instructions=instructions#"Please address the user as Jane Doe. The user has a premium account."
                 )
@@ -57,7 +61,7 @@ class OpenAIClient:
         def run_status(self):
             if self.current_run.status == 'completed': 
                 messages = self.client.beta.threads.messages.list(
-                    thread_id=self.thread.id
+                    thread_id=self.thread_id
                 )
                 print(messages)
             else:
@@ -66,13 +70,12 @@ class OpenAIClient:
         def wait_for_run_completion(self, sleep_interval=5):
             while True:
                 try:
+                    self.current_run = self.client.beta.threads.runs.retrieve(thread_id=self.thread_id, run_id=self.current_run.id)
                     if self.current_run.completed_at:
                         elapsed_time = self.current_run.completed_at - self.current_run.created_at
                         formatted_elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
                         print(f"Run completed in {formatted_elapsed_time}")
-
                         messages = self.client.beta.threads.messages.list(thread_id=self.thread_id)
-                        print(messages)
                         last_message = messages.data[0]
                         response = last_message.content[0].text.value
                         print(f"Assistant Response: {response}")
@@ -82,7 +85,7 @@ class OpenAIClient:
                 print("Waiting for run to complete...")
                 time.sleep(sleep_interval)
 
-    def assistant(self):
-        return OpenAIClient.Assistant(self.client)
+    def assistant(self, assistant_id=None):
+        return OpenAIClient.Assistant(self.client, assistant_id)
     
 openai_client = OpenAIClient()

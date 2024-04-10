@@ -4,3 +4,4 @@ __pycache__/
 back/softgen-django/db.sqlite3
 front/
 requirements.txt
+.vscode/
