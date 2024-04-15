@@ -29,6 +29,7 @@ SECRET_KEY = 'django-insecure-6@ae%65veu43hffv80#4+n3m@#cyfgi!vw40f=uld8t9(k5qk5
 OPENAI_API_KEY = env('OPENAI_API_KEY')
 ASSISTANT_ID = env('ASSISTANT_ID')
 THREAD_ID = env('THREAD_ID')
+GITHUB_TOKEN = env('GITHUB_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)

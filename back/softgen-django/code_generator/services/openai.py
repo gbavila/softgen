@@ -31,13 +31,13 @@ class OpenAIClient:
             self.assistant = self.client.beta.assistants.create(
                 name=name,
                 instructions=instructions,
-                #tools=[{"type": "code_interpreter"}],
                 model=model,
+                **kwargs
                 )
             self.assistant_id = self.assistant.id
             print(f"Assistant ID: {self.assistant.id}")
                 
-        def send_message(self, prompt, instructions="", thread_id=None):
+        def send_message(self, prompt, instructions=None, thread_id=None, **kwargs):
             if (not hasattr(self, 'thread_id') or self.thread_id is None) and thread_id is None:
                 self.thread = self.client.beta.threads.create()
                 self.thread_id = self.thread.id
