@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.conf import settings
@@ -9,7 +10,7 @@ from .models import Software, File
 from .serializers import SoftwareSerializer, FileSerializer
 from .services.openai import openai_client
 from .services.github import git_manager
-from .tasks import long_running_task
+from .tasks import create_files_task
 
 def index(request):
     return HttpResponse("Hello, world. You're at the Code Generator App.")
@@ -37,13 +38,22 @@ class OpenAIPlayground(APIView):
         #     instructions="You are a software engineer. Write and run working code to meet given specifications.",
         #     model="gpt-3.5-turbo-0125"
         # )
+        # assistant.send_message(
+        #     prompt="I want an api with a route /square?number=n which returns me the square of any given number n. Do it using Django framework, but remember to not return me any file content yet, i will ask you later.",
+        #     #thread_id=settings.THREAD_ID
+        # )
+        # response = assistant.wait_for_run_completion()
+        # print(f'Response 1 : {response}')
+
         assistant.send_message(
-            prompt="9 + 9 = ?",
+            prompt="Generate content for third file.",
             thread_id=settings.THREAD_ID
         )
-        response = assistant.wait_for_run_completion()
+        response2 = assistant.wait_for_run_completion()
+        print(f'Response 2 : {response2}')
+        data = json.loads(response2)
 
-        return Response({"text": response})
+        return Response({"text": data['content']})
 
 @api_view(['GET'])
 def getFiles(request):
@@ -60,9 +70,10 @@ class SubmitSpecsView(APIView):
         if serializer.is_valid():
             software = serializer.save()
 
-            preview_content = "PREVIEW DO SOFTWARE"
+            #preview_content = "PREVIEW DO SOFTWARE"
             # Armazenar response_content na sessão
-            request.session['preview_content'] = preview_content
+            #request.session['preview_content'] = preview_content
+            create_files_task.delay_on_commit(software.id) # async
 
             return redirect(f'/preview?software_id={software.id}')
             #return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -72,19 +83,17 @@ class PreviewView(APIView):
     def get(self, request, *args, **kwargs):
         software_id = request.query_params.get('software_id')
         software = Software.objects.get(pk=software_id)
-        preview_content = request.session.get('preview_content', 'Preview não disponível.')
+        #preview_content = request.session.get('preview_content', 'Preview não disponível.')
         # limpar o preview_content da sessão após o uso
-        request.session.pop('preview_content', None)
+        #request.session.pop('preview_content', None)
 
-        long_running_task.delay_on_commit(software_id=software_id)
+        return render(request, 'preview.html', {'software': software}) #, 'preview_content': preview_content
 
-        return render(request, 'preview.html', {'software': software, 'preview_content': preview_content})
-
-class CheckUpdateView(APIView):
+class CheckGenerationView(APIView):
     def get(self, request, *args, **kwargs):
         software_id = request.query_params.get('software_id')
         software = Software.objects.get(pk=software_id)
-        updated_content = software.llm_thread_id
+        status = software.generation_finished
 
-        return Response({'updatedContent': updated_content})
+        return Response({'generation_finished': status})
     

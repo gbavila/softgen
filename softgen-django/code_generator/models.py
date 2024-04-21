@@ -10,6 +10,7 @@ class Software(models.Model):
     processed_specs = models.TextField(blank=True, null=True)
     llm_assistant_id = models.CharField(max_length=255, null=True)
     llm_thread_id = models.CharField(max_length=255, null=True)
+    generation_finished = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name

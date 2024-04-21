@@ -43,7 +43,8 @@ class OpenAIClient:
                 self.thread_id = self.thread.id
                 print(f"Thread criada: id = {self.thread.id}")
             else:
-                self.thread_id = thread_id
+                if thread_id is not None:
+                    self.thread_id = thread_id
                 print(f"Thread existente utilizada: {self.thread_id}")
 
             message = self.client.beta.threads.messages.create(
@@ -84,6 +85,18 @@ class OpenAIClient:
                     raise Exception(f"An error occurred while retrieving the run: {e}")
                 print("Waiting for run to complete...")
                 time.sleep(sleep_interval)
+        
+        def get_thread_id(self):
+            if hasattr(self, 'thread_id'):
+                return self.thread_id
+            else:
+                return None
+    
+        def get_assistant_id(self):
+            if hasattr(self, 'assistant_id'):
+                return self.assistant_id
+            else:
+                return None
 
     def assistant(self, assistant_id=None):
         return OpenAIClient.Assistant(self.client, assistant_id)

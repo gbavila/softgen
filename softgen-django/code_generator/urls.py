@@ -8,5 +8,5 @@ urlpatterns = [
     path('', views.getFiles, name="getFiles"),
     path('submit/', views.SubmitSpecsView.as_view(), name='submit_specs'),
     path('preview/', views.PreviewView.as_view(), name='preview'),
-    path('check-update/', views.CheckUpdateView.as_view(), name='check-update'),
+    path('status/', views.CheckGenerationView.as_view(), name='check-generation'),
 ]

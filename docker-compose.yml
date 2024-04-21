@@ -3,6 +3,7 @@ version: '3.8'
 services:
   django:
     build: ./softgen-django
+    #command: gunicorn softgen.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - ./softgen-django:/app
     env_file:
@@ -13,6 +14,7 @@ services:
       - redis
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - PYTHONUNBUFFERED=1
 
   celery:
     build: ./softgen-django
