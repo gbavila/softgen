@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  django:
+    build: ./softgen-django
+    volumes:
+      - ./softgen-django:/app
+    env_file:
+      - softgen-django/softgen/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+
+  celery:
+    build: ./softgen-django
+    command: celery -A softgen worker -l info
+    volumes:
+      - ./softgen-django:/app
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  # nginx:
+  #   image: nginx:alpine
+  #   volumes:
+  #     - ./softgen-django/static:/static
+  #     - ./nginx:/etc/nginx/conf.d
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - django

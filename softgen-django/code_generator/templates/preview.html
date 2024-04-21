@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Preview Software</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/header.css' %}">
+    <link rel="stylesheet" href="{% static 'css/preview.css' %}">
+</head>
+<body>
+    <header>
+        <h2>Software Generator</h2>
+    </header>
+    <div class="container">
+        <div class="software-info">
+            <h3>Informações do Software</h3>
+            <p id="software-id"><strong>Nome:</strong> {{ software.id }}</p>
+            <p id="software-name"><strong>Nome:</strong> {{ software.name }}</p>
+            <p id="software-specs"><strong>Especificações:</strong> {{ software.specs }}</p>
+        </div>
+        <div class="preview-box">
+            <h3>Preview</h3>
+            <p>{{ preview_content }}</p>
+            <div id="updated-content-box">Aguardando atualização...</div>
+            <script>
+                function checkForUpdates() {
+                    //const softwareId = document.getElementById('software-id').getAttribute('data-software-id');
+                    const softwareId = '{{ software.id }}';
+                    fetch(`/check-update?software_id=${softwareId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.updatedContent) {
+                                document.getElementById('updated-content-box').innerHTML = data.updatedContent;
+                            } else {
+                                // Se ainda não estiver pronto, verifique novamente após um delay
+                                setTimeout(checkForUpdates, 2000); // 2 segundos
+                            }
+                        })
+                        .catch(error => console.error('Erro ao buscar atualizações:', error));
+                }
+        
+                // Iniciar a verificação de atualizações após a carga da página
+                window.onload = checkForUpdates;
+            </script>
+        </div>
+    </div>
+</body>
+</html>

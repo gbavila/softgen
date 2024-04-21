@@ -1,6 +1,6 @@
-back/.venv
+.venv
 .env
 __pycache__/
-back/softgen-django/db.sqlite3
+softgen-django/db.sqlite3
 front/
 .vscode/

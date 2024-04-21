@@ -9,6 +9,7 @@ from .models import Software, File
 from .serializers import SoftwareSerializer, FileSerializer
 from .services.openai import openai_client
 from .services.github import git_manager
+from .tasks import long_running_task
 
 def index(request):
     return HttpResponse("Hello, world. You're at the Code Generator App.")
@@ -75,5 +76,15 @@ class PreviewView(APIView):
         # limpar o preview_content da sessão após o uso
         request.session.pop('preview_content', None)
 
+        long_running_task.delay_on_commit(software_id=software_id)
+
         return render(request, 'preview.html', {'software': software, 'preview_content': preview_content})
+
+class CheckUpdateView(APIView):
+    def get(self, request, *args, **kwargs):
+        software_id = request.query_params.get('software_id')
+        software = Software.objects.get(pk=software_id)
+        updated_content = software.llm_thread_id
+
+        return Response({'updatedContent': updated_content})
     
