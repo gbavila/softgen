@@ -17,9 +17,9 @@ def index(request):
 
 class GitPlayground(APIView):
     def get(self, request, *args, **kwargs):
-        repository = "softgen-teste-v4"
-        # r1 = git_manager.create_repository(repository, "Teste API Github", private=True)
-        # print(r1)
+        repository = "softgen-teste-v5"
+        r1 = git_manager.create_repository(repository, "Teste API Github", private=True)
+        print(r1)
         r2 = git_manager.create_file(repository, "test3.txt", "Adiciona test3.txt", "Teste API")
         print(r2)
         r3 = git_manager.update_file(repository, "test3.txt", "Atualiza test3.txt", "Teste API v2")
@@ -92,8 +92,12 @@ class PreviewView(APIView):
 class CheckGenerationView(APIView):
     def get(self, request, *args, **kwargs):
         software_id = request.query_params.get('software_id')
-        software = Software.objects.get(pk=software_id)
+        try:
+            software = Software.objects.get(pk=software_id)
+        except Software.DoesNotExist:
+            return Response({'error': 'Software not found'}, status=404)
         status = software.generation_finished
+        repo_url = software.github_repo_url
 
-        return Response({'generation_finished': status})
+        return Response({'generation_finished': status, 'github_url': repo_url})
     

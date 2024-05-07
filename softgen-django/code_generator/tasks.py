@@ -3,8 +3,10 @@ from celery import shared_task
 from .models import Software
 from django.conf import settings
 from .services.openai import openai_client
+from .services.github import upload_software_to_github
 from .serializers import FileSerializer
 import time
+from .utils import process_file_list
 
 @shared_task
 def test_celery_task(software_id):
@@ -34,23 +36,44 @@ def create_files_task(software_id):
     software.save()
 
     # Esperar fim da run pela OpenAI
-    files_list = json.loads(assistant.wait_for_run_completion())['files']
-    print(files_list)
+    messages = assistant.wait_for_run_completion()
+    print(messages)
+    last_message = messages.data[0].content[0].text.value
+    data = json.loads(last_message)
+    original_file_list = data.get('files')
+    if original_file_list is None or not original_file_list: # original_file_list = None, []
+        software.delete()
+        raise ValueError("Campo 'files' não retornado na resposta do LLM. Software removido da base.")
+    
+    print(f'Lista gerada pelo LLM: {original_file_list}')
+    file_list = process_file_list(original_file_list)
+    print(f'Lista processada: {file_list}')
 
-    for file_path in files_list:
+    for file_path in file_list:
         assistant.send_message(
             prompt=f'Generate the content for: {file_path}',
             thread_id=thread_id
         )
         # Esperar fim da run pela OpenAI
-        response = json.loads(assistant.wait_for_run_completion())
-        print(f'Content for {file_path}: \n{response}\n')
-        file_content = response['content']
+        messages = assistant.wait_for_run_completion()
+        last_message = messages.data[0].content[0].text.value
+        response = json.loads(last_message, strict=False)
+        #print(f'Content for {file_path}: \n{response}\n')
+        file_content = response.get('content')
+        if file_content is None:
+            print(f'(SKIPPING) Null Content for {file_path}: \n{response}\n')
+            continue
+
+        try:
+            instructions = response.get('instructions')[:72]
+        except:
+            instructions = ""
 
         file = {'software': software.id,
                 'path': file_path,
                 'version': 1,
-                'content': file_content}
+                'content': file_content,
+                'instructions': instructions}
         serializer = FileSerializer(data=file)
         if serializer.is_valid():
             serializer.save()
@@ -60,4 +83,9 @@ def create_files_task(software_id):
     
     software.generation_finished = True
     software.save()
-    print(f'Erros na criação ({len(failed_files)}/{len(files_list)}): {failed_files}')
+
+    if failed_files:
+        print(f'Erros na criação ({len(failed_files)}/{len(file_list)}): {failed_files}')
+    else:
+        print(f'Code generated successfully.')
+        upload_software_to_github(software_id)

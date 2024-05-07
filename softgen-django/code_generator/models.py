@@ -11,6 +11,7 @@ class Software(models.Model):
     llm_assistant_id = models.CharField(max_length=255, null=True)
     llm_thread_id = models.CharField(max_length=255, null=True)
     generation_finished = models.BooleanField(default=False)
+    github_repo_url = models.CharField(max_length=255, null=True)
 
     def __str__(self):
         return self.name
@@ -21,6 +22,7 @@ class File(models.Model):
     path = models.CharField(max_length=255)
     version = models.IntegerField()
     content = models.TextField()
+    instructions = models.CharField(max_length=72, null=True) # this will be used as github commit message
 
     def __str__(self):
         return f"{self.path} (Versão {self.version})"

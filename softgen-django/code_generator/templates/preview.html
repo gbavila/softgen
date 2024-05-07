@@ -23,16 +23,20 @@
             <div id="status-box">Aguardando atualização...</div>
             <script>
                 function checkForUpdates() {
+                    const update_interval = 5000 // 5 segundos
                     //const softwareId = document.getElementById('software-id').getAttribute('data-software-id');
                     const softwareId = '{{ software.id }}';
                     fetch(`/status?software_id=${softwareId}`)
                         .then(response => response.json())
                         .then(data => {
-                            if (data.generation_finished) {
-                                document.getElementById('status-box').innerHTML = 'Geração de Código finalizada.';
+                            if (data.generation_finished && data.github_url == null) {
+                                document.getElementById('status-box').innerHTML = 'Geração de Código finalizada.<br>Enviando código para o Github...';
+                                setTimeout(checkForUpdates, update_interval);
+                            } else if (data.generation_finished && data.github_url != null) {
+                                document.getElementById('status-box').innerHTML = 'Geração de Código finalizada:<br><a href="' + data.github_url + '">' + data.github_url + '</a>';
                             } else {
                                 // Se ainda não estiver pronto, verifique novamente após um delay
-                                setTimeout(checkForUpdates, 5000); // 5 segundos
+                                setTimeout(checkForUpdates, update_interval);
                             }
                         })
                         .catch(error => console.error('Erro ao buscar atualizações:', error));

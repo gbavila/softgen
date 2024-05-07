@@ -1,5 +1,6 @@
 from github import Github, GithubException
 from django.conf import settings
+from ..models import Software
 
 class GitHubManager:
     def __init__(self):
@@ -62,3 +63,16 @@ class GitHubManager:
             raise Exception(f"Erro ao listar commits no repositório {repository_name}: repositório não encontrado.")
 
 git_manager = GitHubManager()
+
+def upload_software_to_github(software_id):
+    software = Software.objects.get(pk=software_id)
+    files = software.files.all()
+    repository = f"softgen-{software_id}"
+    repo = git_manager.create_repository(repository, f"{software.name} (id={software_id}): software gerado automaticamente via softgen", private=True)
+
+    for file in files:
+        git_manager.create_file(repository, file.path, file.instructions, file.content)
+    
+    print(f'{software.name} (id={software_id}) code uploaded to github successfully.')
+    software.github_repo_url = repo.html_url
+    software.save()
