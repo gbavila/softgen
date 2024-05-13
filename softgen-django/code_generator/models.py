@@ -25,4 +25,4 @@ class File(models.Model):
     instructions = models.CharField(max_length=72, null=True) # this will be used as github commit message
 
     def __str__(self):
-        return f"{self.path} (Versão {self.version})"
+        return f"{self.path} (Version: {self.version})"

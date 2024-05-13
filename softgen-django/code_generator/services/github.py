@@ -12,7 +12,7 @@ class GitHubManager:
         try:
             return self.github.get_repo(repository_name)
         except GithubException as e:
-            raise GithubException(f"Erro ao acessar o repositório {repository_name}: {str(e)}")
+            raise GithubException(f"Error accessing repository {repository_name}: {str(e)}")
         
     def create_repository(self, name, description="", private=True):
         try:
@@ -21,19 +21,19 @@ class GitHubManager:
             print(f"Repositório '{name}' criado com sucesso.")
             return repo
         except GithubException as e:
-            raise GithubException(f"Erro ao criar o repositório {name}: {str(e)}")
+            raise GithubException(f"Error creating repository {name}: {str(e)}")
 
     def create_file(self, repository_name, file_path, commit_message, content, branch="main"):
         repo = self.get_repository(repository_name)
         if repo:
             try:
                 response = repo.create_file(file_path, commit_message, content, branch=branch)
-                print(f"Arquivo {file_path} criado com sucesso no branch {branch}.")
+                print(f"File {file_path} successfully created in {branch} branch.")
                 return response
             except GithubException as e:
-                raise GithubException(f"Erro ao criar arquivo {file_path} no repositório {repository_name}: {str(e)}")
+                raise GithubException(f"Error creating file {file_path} on repository {repository_name}: {str(e)}")
         else:
-            raise Exception(f"Erro ao criar arquivo {file_path} no repositório {repository_name}: repositório não encontrado.")
+            raise Exception(f"Error creating file {file_path} on repository {repository_name}: Repository not found.")
 
     def update_file(self, repository_name, file_path, commit_message, content, branch="main"):
         repo = self.get_repository(repository_name)
@@ -41,12 +41,12 @@ class GitHubManager:
             try:
                 contents = repo.get_contents(file_path, ref=branch)
                 response = repo.update_file(contents.path, commit_message, content, contents.sha, branch=branch)
-                print(f"Arquivo {file_path} atualizado com sucesso no branch {branch}.")
+                print(f"File {file_path} successfully updated to the {branch} branch.")
                 return response
             except GithubException as e:
-                raise GithubException(f"Erro ao atualizar arquivo {file_path} no repositório {repository_name}: {str(e)}")
+                raise GithubException(f"Error updating file {file_path} on repository {repository_name}: {str(e)}")
         else:
-            raise Exception(f"Erro ao atualizar arquivo {file_path} no repositório {repository_name}: repositório não encontrado.")
+            raise Exception(f"Error updating file {file_path} on repository {repository_name}: Repository not found.")
 
     def get_commits(self, repository_name, branch="main"):
         repo = self.get_repository(repository_name)
@@ -58,9 +58,9 @@ class GitHubManager:
                     print(commit.commit.message)
                 return commits
             except GithubException as e:
-                raise GithubException(f"Erro ao listar commits no repositório {repository_name}: {str(e)}")
+                raise GithubException(f"Error listing commits on repository {repository_name}: {str(e)}")
         else:
-            raise Exception(f"Erro ao listar commits no repositório {repository_name}: repositório não encontrado.")
+            raise Exception(f"Error listing commits on repository {repository_name}: Repository not found.")
 
 git_manager = GitHubManager()
 
@@ -68,7 +68,7 @@ def upload_software_to_github(software_id):
     software = Software.objects.get(pk=software_id)
     files = software.files.all()
     repository = f"softgen-{software_id}"
-    repo = git_manager.create_repository(repository, f"{software.name} (id={software_id}): software gerado automaticamente via softgen", private=True)
+    repo = git_manager.create_repository(repository, f"{software.name} (id={software_id}): automatically generated software (Softgen)", private=True)
 
     for file in files:
         git_manager.create_file(repository, file.path, file.instructions, file.content)

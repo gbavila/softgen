@@ -23,7 +23,7 @@ class OpenAIClient:
     class Assistant:
         def __init__(self, client, assistant_id=None):
             self.client = client
-            # Opção para usar assistant já existente
+            # Option to use existing assistant
             if assistant_id is not None:
                 self.assistant_id = assistant_id
 
@@ -41,11 +41,11 @@ class OpenAIClient:
             if (not hasattr(self, 'thread_id') or self.thread_id is None) and thread_id is None:
                 self.thread = self.client.beta.threads.create()
                 self.thread_id = self.thread.id
-                print(f"Thread criada: id = {self.thread.id}")
+                print(f"Thread created: id = {self.thread.id}")
             else:
                 if thread_id is not None:
                     self.thread_id = thread_id
-                print(f"Thread existente utilizada: {self.thread_id}")
+                print(f"Using existing Thread: {self.thread_id}")
 
             message = self.client.beta.threads.messages.create(
                     thread_id=self.thread_id,
