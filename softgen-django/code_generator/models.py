@@ -21,7 +21,7 @@ class File(models.Model):
     # related_name='files' permite acessar todos os arquivos de um software usando software.files
     path = models.CharField(max_length=255)
     version = models.IntegerField()
-    content = models.TextField()
+    content = models.TextField(blank=True)
     instructions = models.CharField(max_length=72, null=True) # this will be used as github commit message
 
     def __str__(self):

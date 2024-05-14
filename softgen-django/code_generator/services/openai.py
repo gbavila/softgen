@@ -56,7 +56,7 @@ class OpenAIClient:
             self.current_run = self.client.beta.threads.runs.create(
                     thread_id=self.thread_id,
                     assistant_id=self.assistant_id,
-                    #instructions=instructions#"Please address the user as Jane Doe. The user has a premium account."
+                    instructions=instructions #"Please address the user as Jane Doe. The user has a premium account."
                 )
         
         def run_status(self):

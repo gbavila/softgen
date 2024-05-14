@@ -3,9 +3,9 @@ import json
 def process_file_list(list: list):
     filtered_files = []
     for path in list:
-        if '.' in path:
+        if '.' in path or 'dockerfile' in path.lower():
             parts = path.rsplit('.', 1)
-            if len(parts) > 1 and parts[1]:
+            if len(parts) > 1 and parts[1] or 'dockerfile' in parts[0].lower():
                 filtered_files.append(path)
             else:
                 print(f'{path} removed from file list.')

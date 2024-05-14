@@ -25,8 +25,9 @@ def create_files_task(software_id):
 
     assistant = openai_client.assistant(settings.ASSISTANT_ID)
     assistant.send_message(
-        prompt=software.processed_specs,
-        thread_id=thread_id
+        prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
+        thread_id=thread_id,
+        #instructions='Add the necessary files for the project to be executable with the docker-compose up --build command. Add the github actions files in order to the project to be deployed on heroku with secrets.HEROKU_API_KEY saved on the github repository. The response should be in json format given in the main instructions.'
     )
 
     # Update software with LLM info
@@ -76,7 +77,7 @@ def create_files_task(software_id):
             instructions = ""
 
         file = {'software': software.id,
-                'path': file_path,
+                'path': file_path if file_path[0] != '/' else file_path[1:], # remove initial / to avoid github api error
                 'version': 1,
                 'content': file_content,
                 'instructions': instructions}
