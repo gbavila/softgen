@@ -7,13 +7,50 @@ from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .models import Software, File
-from .serializers import SoftwareSerializer, FileSerializer
+from .serializers import SoftwareSerializer, FileSerializer, DeploymentSerializer
 from .services.openai import openai_client
 from .services.github import git_manager
+from .services.vercel import vercel_manager
 from .tasks import create_files_task
 
 def index(request):
     return HttpResponse("Hello, world. You're at the Code Generator App.")
+
+class VercelPlayground(APIView):
+    def get(self, request, *args, **kwargs):
+        # repository = "teste-api-vercel"
+        # git_manager.create_repository(repository, "Teste API Vercel", private=True)
+        # project_response = vercel_manager.create_project('softgen-auto', repository)
+        # print('Create Project Response:', project_response)
+
+        # project_id = project_response.get('id')
+        # print(f'Generated project_id: {project_id}')
+
+        project_id = ''
+
+        deployments = vercel_manager.list_deployments(project_id)
+        print(f'List Deployments Response: {deployments}')
+
+        # Get a specific deployment by ID
+        if deployments and deployments['deployments']:
+            for deployment in deployments['deployments']:
+                deployment_id = deployment['uid']
+                updated_deployment = vercel_manager.get_deployment_by_id(deployment_id) # just testing the method
+                print(f'Get Deployment by ID Response: {updated_deployment}')
+
+                # Check if a deployment was successful
+                status = vercel_manager.check_deployment_status(deployment_id)
+                print(f'Check Deployment Status Response: {status}')
+
+                # Get deployment events and print error texts
+                error_events = vercel_manager.get_deployment_errors(deployment_id)
+                print(f'Error Events: {error_events}')
+
+                # Get deployment logs
+                logs = vercel_manager.get_deployment_logs(deployment_id)
+                print(f'Deployment Logs: {logs}')
+
+        return Response({"status": 'OK'})
 
 class GitPlayground(APIView):
     def get(self, request, *args, **kwargs):
@@ -54,6 +91,26 @@ class OpenAIPlayground(APIView):
         data = json.loads(response2)
 
         return Response({"text": data['content']})
+
+class Playground(APIView):
+    def get(self, request, *args, **kwargs):
+        software = Software.objects.get(pk=37)
+        software.vercel_project_id = ''
+        software.save()
+
+        # Since the code is uploaded before the Vercel project creation, we need to trigger manually the deployment
+        vercel_deployment = vercel_manager.create_deployment('', 0)
+
+        deployment = {'id': vercel_deployment.get('id'),
+                      'software': software.id,
+                      'status': vercel_deployment.get('status')}
+        serializer = DeploymentSerializer(data=deployment)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            print(serializer.errors)
+            raise Exception(f'Error creating deployment in database: {serializer.errors}')
+        return Response({"Response": 'OK'})
 
 @api_view(['GET'])
 def getFiles(request):

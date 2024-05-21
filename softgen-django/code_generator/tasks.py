@@ -2,8 +2,9 @@ from celery import shared_task
 from .models import Software
 from django.conf import settings
 from .services.openai import openai_client
-from .services.github import upload_software_to_github
-from .serializers import FileSerializer
+from .services.github import git_manager, upload_software_to_github
+from .services.vercel import vercel_manager
+from .serializers import FileSerializer, DeploymentSerializer
 import time
 from .utils import process_file_list, check_already_generated, json_load_message
 
@@ -92,7 +93,37 @@ def create_files_task(software_id):
     software.save()
 
     if failed_files:
-        print(f'Erros na criação ({len(failed_files)}/{len(file_list)}): {failed_files}')
+        print(f'Creation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
     else:
-        print(f'Code generated successfully.')
-        upload_software_to_github(software_id)
+        print('Code generated successfully.')
+
+        project_name = f"softgen-{software_id}"
+        upload_software_to_github(project_name, software_id)
+        # Adicionar delete repo se algo falhar
+
+        vercel_response = vercel_manager.create_project(name = project_name, 
+                                                        github_repo = project_name)
+        print('Vercel project created successfully.')
+
+        vercel_project_id = vercel_response.get('id')
+        vercel_repoId = vercel_response.get('link').get('repoId')
+        
+        software.vercel_project_id = vercel_project_id
+        software.save()
+
+        # Since the code is uploaded before the Vercel project creation, we need to trigger manually the deployment
+        vercel_deployment = vercel_manager.create_deployment(vercel_project_id, vercel_repoId, target='production')
+        print('Vercel deployment created successfully.')
+
+        deployment = {'id': vercel_deployment.get('id'),
+                      'software': software.id,
+                      'vercel_repoId': vercel_repoId,
+                      'status': vercel_deployment.get('status')}
+        serializer = DeploymentSerializer(data=deployment)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            print(serializer.errors)
+            raise Exception(f'Error creating deployment in database: {serializer.errors}')
+        
+        print(f'First {project_name} run attempt successfully started.')

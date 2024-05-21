@@ -64,15 +64,14 @@ class GitHubManager:
 
 git_manager = GitHubManager()
 
-def upload_software_to_github(software_id):
+def upload_software_to_github(repository, software_id):
     software = Software.objects.get(pk=software_id)
     files = software.files.all()
-    repository = f"softgen-{software_id}"
     repo = git_manager.create_repository(repository, f"{software.name} (id={software_id}): automatically generated software (Softgen)", private=True)
 
     for file in files:
         git_manager.create_file(repository, file.path, file.instructions, file.content)
     
-    print(f'{software.name} (id={software_id}) code uploaded to github successfully.')
+    print(f'{software.name} (id={software_id}) code uploaded to github ({repository}) successfully.')    
     software.github_repo_url = repo.html_url
     software.save()

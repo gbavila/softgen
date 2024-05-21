@@ -3,6 +3,9 @@ import json
 from django.conf import settings
 
 class VercelManager:
+    possible_status = ['BUILDING', 'ERROR', 'INITIALIZING', 'QUEUED', 'READY', 'CANCELED']
+    frameworks = ["blitzjs", "nextjs", "gatsby", "remix", "astro", "hexo", "eleventy", "docusaurus-2", "docusaurus", "preact", "solidstart-1", "solidstart", "dojo", "ember", "vue", "scully", "ionic-angular", "angular", "polymer", "svelte", "sveltekit", "sveltekit-1", "ionic-react", "create-react-app", "gridsome", "umijs", "sapper", "saber", "stencil", "nuxtjs", "redwoodjs", "hugo", "jekyll", "brunch", "middleman", "zola", "hydrogen", "vite", "vitepress", "vuepress", "parcel", "sanity", "storybook"]
+    
     def __init__(self):
         self.token = settings.VERCEL_TOKEN
         self.api_url = 'https://api.vercel.com'
@@ -28,6 +31,20 @@ class VercelManager:
                     'repo': github_repo,
                     'type': 'github'
                 }}
+        response = requests.post(url, headers=self.headers, json=data)
+        return self.handle_response(response)
+    
+    def create_deployment(self, project_id, repoId, branch='main', target=None):
+        url = f'{self.api_url}/v13/deployments'
+        data = {
+            'name': project_id,
+            'gitSource': {
+                'type': 'github',
+                'repoId': repoId,
+                'ref': branch,
+            },
+            'target': target
+        }
         response = requests.post(url, headers=self.headers, json=data)
         return self.handle_response(response)
 
@@ -60,7 +77,7 @@ class VercelManager:
         return self.handle_response(response)
     
     def get_deployment_logs(self, deployment_id):
-        url = f'{self.api_url}/v13/deployments/{deployment_id}/events'
+        url = f'{self.api_url}/v2/deployments/{deployment_id}/events'
         response = requests.get(url, headers=self.headers)
         return self.handle_response(response)
     

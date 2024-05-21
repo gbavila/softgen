@@ -31,6 +31,7 @@ class File(models.Model):
 class Deployment(models.Model):
     id = models.CharField(max_length=100, primary_key=True) # Vercel deployment id
     software = models.ForeignKey(Software, on_delete=models.CASCADE, related_name='deployments')
+    vercel_repoId = models.IntegerField(null=True)
     status = models.CharField(max_length=255, null=True)
     errors = models.TextField(blank=True, null=True) # from deployment events
 

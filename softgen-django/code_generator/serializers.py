@@ -1,4 +1,4 @@
-from .models import Software, File
+from .models import Software, File, Deployment
 from rest_framework import serializers
 
 class SoftwareSerializer(serializers.ModelSerializer):
@@ -22,4 +22,9 @@ class SoftwareSerializer(serializers.ModelSerializer):
 class FileSerializer(serializers.ModelSerializer):
     class Meta:
         model = File
+        fields = '__all__'
+
+class DeploymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Deployment
         fields = '__all__'

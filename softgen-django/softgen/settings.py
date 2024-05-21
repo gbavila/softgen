@@ -31,6 +31,7 @@ OPENAI_API_KEY = env('OPENAI_API_KEY')
 ASSISTANT_ID = env('ASSISTANT_ID')
 THREAD_ID = env('THREAD_ID')
 GITHUB_TOKEN = env('GITHUB_TOKEN')
+VERCEL_TOKEN = env('VERCEL_TOKEN')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool('DEBUG', default=False)
