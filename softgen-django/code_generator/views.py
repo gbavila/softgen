@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .models import Software, File
+from .models import Software, File, Deployment
 from .serializers import SoftwareSerializer, FileSerializer, DeploymentSerializer
 from .services.openai import openai_client
 from .services.github import git_manager
@@ -153,8 +153,34 @@ class CheckGenerationView(APIView):
             software = Software.objects.get(pk=software_id)
         except Software.DoesNotExist:
             return Response({'error': 'Software not found'}, status=404)
+        
         status = software.generation_finished
         repo_url = software.github_repo_url
+        vercel_url = None
+        deployment_status = None
 
-        return Response({'generation_finished': status, 'github_url': repo_url})
+        vercel_project_id = software.vercel_project_id        
+        if vercel_project_id:
+            deployments = software.deployments
+            if not deployments or deployments == None:
+                print('There is still no deployment created.')
+            else:
+                current_deployment = deployments.order_by('-created_at').first()
+                updated_deployment = vercel_manager.get_deployment_by_id(current_deployment.id)
+                new_status = updated_deployment['status']
+                deployment_status = new_status
+
+                if new_status != current_deployment.status:
+                    current_deployment.status = new_status
+                    if new_status == 'READY':
+                        url = updated_deployment['url']
+                        vercel_url = url
+                        current_deployment.url = url
+                    elif new_status == 'ERROR':
+                        print(f'Deployment {current_deployment.id} failed. Sending back to LLM.')
+                        # direcionar para task de correção
+                    current_deployment.save()
+
+        return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
     
+# Criar endpoint para correção quando o dep dá ready mas o user quer mudar alguma coisa ou vê manualmente que algo deu errado

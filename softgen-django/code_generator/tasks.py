@@ -26,7 +26,8 @@ def create_files_task(software_id):
 
     assistant = openai_client.assistant(settings.ASSISTANT_ID)
     assistant.send_message(
-        prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
+        #prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
+        prompt=software.processed_specs + ' Include necessary files for the project to be deployed in Vercel platform.',
         thread_id=thread_id,
         #instructions='Add the necessary files for the project to be executable with the docker-compose up --build command. Add the github actions files in order to the project to be deployed on heroku with secrets.HEROKU_API_KEY saved on the github repository. The response should be in json format given in the main instructions.'
     )
