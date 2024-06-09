@@ -11,4 +11,5 @@ urlpatterns = [
     path('submit/', views.SubmitSpecsView.as_view(), name='submit_specs'),
     path('preview/', views.PreviewView.as_view(), name='preview'),
     path('status/', views.CheckGenerationView.as_view(), name='check-generation'),
+    path('delete/', views.DeleteSoftwareView.as_view(), name='delete-software'),
 ]

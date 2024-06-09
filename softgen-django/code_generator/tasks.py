@@ -1,3 +1,4 @@
+import json
 from celery import shared_task
 from .models import Software
 from django.conf import settings
@@ -27,7 +28,7 @@ def create_files_task(software_id):
     assistant = openai_client.assistant(settings.ASSISTANT_ID)
     assistant.send_message(
         #prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
-        prompt=software.processed_specs + ' Include necessary files for the project to be deployed in Vercel platform.',
+        prompt=software.processed_specs + ' Include necessary files for the project to be deployed in Vercel platform, vercel.json file must be in project root.',
         thread_id=thread_id,
         #instructions='Add the necessary files for the project to be executable with the docker-compose up --build command. Add the github actions files in order to the project to be deployed on heroku with secrets.HEROKU_API_KEY saved on the github repository. The response should be in json format given in the main instructions.'
     )
@@ -39,7 +40,7 @@ def create_files_task(software_id):
 
     # Wait OpenAI run
     messages = assistant.wait_for_run_completion()
-    print(messages)
+    #print(messages)
     
     analysis = check_already_generated(messages)
     # analysis = {'framework': 'Django', 
@@ -72,10 +73,13 @@ def create_files_task(software_id):
         if file_content is None:
             print(f'(SKIPPING) Null Content for {file_path}: \n{response}\n')
             continue
+        elif isinstance(file_content, dict): # .json files case
+            file_content = json.dumps(file_content, indent=4)
 
         try:
             instructions = response.get('instructions')[:72]
-        except:
+        except Exception as ex:
+            print(ex)
             instructions = ""
 
         file = {'software': software.id,
@@ -100,7 +104,7 @@ def create_files_task(software_id):
 
         project_name = f"softgen-{software_id}"
         upload_software_to_github(project_name, software_id)
-        # Adicionar delete repo se algo falhar
+        software = Software.objects.get(pk=software_id)
 
         vercel_response = vercel_manager.create_project(name = project_name, 
                                                         github_repo = project_name)

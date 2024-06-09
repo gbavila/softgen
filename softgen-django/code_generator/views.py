@@ -1,5 +1,5 @@
 import json
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.conf import settings
 from rest_framework import status
@@ -184,3 +184,17 @@ class CheckGenerationView(APIView):
         return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
     
 # Criar endpoint para correção quando o dep dá ready mas o user quer mudar alguma coisa ou vê manualmente que algo deu errado
+
+class DeleteSoftwareView(APIView):
+    def delete(self, request, *args, **kwargs):
+        software_id = request.query_params.get('software_id')
+        software = get_object_or_404(Software, pk=software_id)
+        if software.vercel_project_id:
+            vercel_manager.delete_project(software.vercel_project_id)
+        if software.github_repo_url:
+            git_manager.delete_repo_by_url(software.github_repo_url)
+
+        software.delete()
+
+        return Response({'message': f'Software {software_id} and its associated files and deployments were deleted successfully.'}) #, 'preview_content': preview_content
+    

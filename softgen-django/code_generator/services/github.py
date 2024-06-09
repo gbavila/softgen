@@ -62,6 +62,15 @@ class GitHubManager:
         else:
             raise Exception(f"Error listing commits on repository {repository_name}: Repository not found.")
 
+    def delete_repo_by_url(self, repo_url):
+        try:
+            user_repo = repo_url.split('/')[-1]
+            repo = self.get_repository(user_repo)
+            repo.delete()
+            print(f"Repositório '{user_repo}' deletado com sucesso.")
+        except GithubException as e:
+            raise GithubException(f"Error deleting repository {repo_url}: {str(e)}")
+
 git_manager = GitHubManager()
 
 def upload_software_to_github(repository, software_id):
