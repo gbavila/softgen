@@ -30,7 +30,7 @@ def filter_assistant_messages(messages):
 
 def check_already_generated(messages) -> dict:
     analysis = {'failed': False, 'generated': [], 'files': []}
-    assistant_messages = filter_assistant_messages(messages.data)
+    assistant_messages = filter_assistant_messages(messages)
     
     for msg in assistant_messages:
         if msg.get('framework'):
@@ -54,3 +54,21 @@ def check_already_generated(messages) -> dict:
     #             'generated': [{'file': '...', 'instructions': '...', 'content': '...'}, ..., {'file': '...', 'instructions': '...', 'content': '...'}], 
     #             'files': ['file_1', ..., 'file_n']}
     return analysis
+
+def get_latest_openai_messages(messages):
+    
+    last_user_message_index = None
+
+    for index, message in enumerate(messages):
+        if message.role == 'user':
+            last_user_message_index = index
+            break
+
+    if last_user_message_index is None:
+        # No user message found, return an empty list
+        return []
+
+    # Collect all messages after the last user message
+    #messages_after_last_user = messages[last_user_message_index + 1:]
+    messages_after_last_user = messages[0:last_user_message_index]
+    return messages_after_last_user

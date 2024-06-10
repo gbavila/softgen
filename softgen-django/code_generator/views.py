@@ -11,7 +11,7 @@ from .serializers import SoftwareSerializer, FileSerializer, DeploymentSerialize
 from .services.openai import openai_client
 from .services.github import git_manager
 from .services.vercel import vercel_manager
-from .tasks import create_files_task
+from .tasks import create_files_task, fix_software_task
 
 def index(request):
     return HttpResponse("Hello, world. You're at the Code Generator App.")
@@ -178,7 +178,7 @@ class CheckGenerationView(APIView):
                         current_deployment.url = url
                     elif new_status == 'ERROR':
                         print(f'Deployment {current_deployment.id} failed. Sending back to LLM.')
-                        # direcionar para task de correção
+                        fix_software_task.delay_on_commit(software_id, current_deployment.id) # async
                     current_deployment.save()
 
         return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
