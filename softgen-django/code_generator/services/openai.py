@@ -87,6 +87,10 @@ class OpenAIClient:
                 print("Waiting for run to complete...")
                 time.sleep(sleep_interval)
         
+        def get_thread_messages(self, thread_id):
+            messages = self.client.beta.threads.messages.list(thread_id=thread_id)
+            return messages
+        
         def get_thread_id(self):
             if hasattr(self, 'thread_id'):
                 return self.thread_id

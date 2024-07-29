@@ -145,7 +145,7 @@ def fix_software_task(software_id, deployment_id):
         print(f'Max re-generation retries reached ({threshold}).')
         return
 
-    logs = vercel_manager.get_deployment_logs(deployment_id)
+    logs = [event['payload']['text'] for event in vercel_manager.get_deployment_logs(deployment_id)]
     if not logs:
         raise Exception('Empty Vercel deployment logs')
     
@@ -158,19 +158,22 @@ def fix_software_task(software_id, deployment_id):
 
     # Wait OpenAI run
     messages = assistant.wait_for_run_completion()
+    #messages = assistant.get_thread_messages(software.llm_thread_id)
 
     # Retrieve msgs given in response to last prompt
     target_messages = get_latest_openai_messages(messages.data)
 
     analysis = check_already_generated(target_messages)
+    print(analysis)
 
     if analysis['failed']:
         raise ValueError(f"Re-generation request failed:\n{analysis}\n\n{messages}")
     
-    file_list = process_file_list(analysis['files'])
-    print(f'Filtered file list: {file_list}')
     generated_files = [msg['file'] for msg in analysis['generated']]
-
+    # When regenerating, usually LLM does not send that first message with file list and framework
+    file_list = process_file_list(analysis['files']) if analysis['files'] else generated_files
+    print(f'Filtered file list: {file_list}')
+    
     failed_files = []
 
     for file_path in file_list:

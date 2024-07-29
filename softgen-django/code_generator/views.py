@@ -166,20 +166,21 @@ class CheckGenerationView(APIView):
                 print('There is still no deployment created.')
             else:
                 current_deployment = deployments.order_by('-created_at').first()
-                updated_deployment = vercel_manager.get_deployment_by_id(current_deployment.id)
-                new_status = updated_deployment['status']
-                deployment_status = new_status
+                if current_deployment:
+                    updated_deployment = vercel_manager.get_deployment_by_id(current_deployment.id)
+                    new_status = updated_deployment['status']
+                    deployment_status = new_status
 
-                if new_status != current_deployment.status:
-                    current_deployment.status = new_status
-                    if new_status == 'READY':
-                        url = updated_deployment['url']
-                        vercel_url = url
-                        current_deployment.url = url
-                    elif new_status == 'ERROR':
-                        print(f'Deployment {current_deployment.id} failed. Sending back to LLM.')
-                        fix_software_task.delay_on_commit(software_id, current_deployment.id) # async
-                    current_deployment.save()
+                    if new_status != current_deployment.status:
+                        current_deployment.status = new_status
+                        if new_status == 'READY':
+                            url = updated_deployment['url']
+                            vercel_url = url
+                            current_deployment.url = url
+                        elif new_status == 'ERROR':
+                            print(f'Deployment {current_deployment.id} failed. Sending back to LLM.')
+                            fix_software_task.delay_on_commit(software_id, current_deployment.id) # async
+                        current_deployment.save()
 
         return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
     
