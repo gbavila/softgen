@@ -1,4 +1,6 @@
+from datetime import datetime
 import json
+from .serializers import LLM_Run_StatsSerializer
 
 def process_file_list(list: list):
     filtered_files = []
@@ -72,3 +74,24 @@ def get_latest_openai_messages(messages):
     #messages_after_last_user = messages[last_user_message_index + 1:]
     messages_after_last_user = messages[0:last_user_message_index]
     return messages_after_last_user
+
+def save_llm_run_stats(
+        software_id: int,
+        time_start: datetime,
+        run_number: int = 1, 
+        model: str = 'gpt-3.5-turbo-0125'
+        ) -> None:
+    
+    run_stats = {
+        'software': software_id,
+        'run_number': run_number,
+        'model': model,
+        'time_elapsed': datetime.now() - time_start
+        }
+    
+    serializer = LLM_Run_StatsSerializer(data=run_stats)
+    if serializer.is_valid():
+        serializer.save()
+    else:
+        # Dont want to raise any erros, so run wont be impacted
+        print(f'Could not create LLM stats object: {serializer.errors}')

@@ -47,7 +47,7 @@ class OpenAIClient:
                     self.thread_id = thread_id
                 print(f"Using existing Thread: {self.thread_id}")
 
-            message = self.client.beta.threads.messages.create(
+            self.client.beta.threads.messages.create(
                     thread_id=self.thread_id,
                     role="user",
                     content=prompt

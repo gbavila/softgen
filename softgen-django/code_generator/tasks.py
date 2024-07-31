@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from celery import shared_task
 from .models import Software, Deployment
 from django.conf import settings
@@ -7,7 +8,10 @@ from .services.github import git_manager, upload_software_to_github, update_soft
 from .services.vercel import vercel_manager
 from .serializers import FileSerializer, DeploymentSerializer
 import time
-from .utils import process_file_list, check_already_generated, json_load_message, get_latest_openai_messages
+from .utils import (
+    process_file_list, check_already_generated, json_load_message, 
+    get_latest_openai_messages, save_llm_run_stats
+)
 
 @shared_task
 def test_celery_task(software_id):
@@ -24,7 +28,8 @@ def create_files_task(software_id):
     software = Software.objects.get(pk=software_id)
     thread_id = None #settings.THREAD_ID
     failed_files = []
-
+    
+    time_start = datetime.now()
     assistant = openai_client.assistant(settings.ASSISTANT_ID)
     assistant.send_message(
         #prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
@@ -101,6 +106,7 @@ def create_files_task(software_id):
         print(f'Creation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
     else:
         print('Code generated successfully.')
+        save_llm_run_stats(software_id, time_start)
 
         project_name = f"softgen-{software_id}"
         upload_software_to_github(project_name, software_id)
@@ -150,6 +156,7 @@ def fix_software_task(software_id, deployment_id):
         raise Exception('Empty Vercel deployment logs')
     
     logs = ';\n'.join(logs)
+    time_start = datetime.now()
     assistant = openai_client.assistant(software.llm_assistant_id)
     assistant.send_message(
         prompt=f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null. Logs:\n {logs}',
@@ -234,6 +241,7 @@ def fix_software_task(software_id, deployment_id):
         print(f'Re-generation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
     else:
         print('Code re-generated successfully.')
+        save_llm_run_stats(software_id, time_start)
         update_software_files(software_id, next_version)
 
         print("Listing Vercel's deployments (5 retries)")

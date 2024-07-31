@@ -1,4 +1,5 @@
 .venv
+.venv_note
 .env
 __pycache__/
 softgen-django/db.sqlite3

@@ -1,4 +1,4 @@
-from .models import Software, File, Deployment
+from .models import Software, File, Deployment, LLM_Run_Stats
 from rest_framework import serializers
 
 class SoftwareSerializer(serializers.ModelSerializer):
@@ -28,3 +28,9 @@ class DeploymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Deployment
         fields = '__all__'
+
+class LLM_Run_StatsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LLM_Run_Stats
+        fields = '__all__'
+        
