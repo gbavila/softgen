@@ -1,6 +1,7 @@
 import time
 from openai import OpenAI
 from django.conf import settings
+from textwrap import dedent
 
 class OpenAIClient:
     def __init__(self):
@@ -107,3 +108,22 @@ class OpenAIClient:
         return OpenAIClient.Assistant(self.client, assistant_id)
     
 openai_client = OpenAIClient()
+
+example_processed_specs = dedent("""
+Project: PC Build Cost Calculator
+Overview: This project is a simple web page with features for adding pc build components and its prices, 
+          calculating the total cost for the build.
+Features:
+- Web Page header with project name, styled properly
+- Interactive center table for adding components, should have columns name and price
+- Center table lines should be auto colered depending on inputted price. Colors:
+-- Green if its representing less than 10% of total cost.
+-- Yellow if its representing more than 10% and less than 20% of total cost.
+-- Red if its representing more than 20% of total cost.
+- Should have a copy button to copy center table to clipboard.
+Routes:
+- root endpoint for the single page: /
+Deploy:
+- Deployment on Vercel platform, project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository. 
+""")
+# Not adding framework so it wont introduce a bias into the model
