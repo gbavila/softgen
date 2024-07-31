@@ -111,19 +111,63 @@ openai_client = OpenAIClient()
 
 example_processed_specs = dedent("""
 Project: PC Build Cost Calculator
-Overview: This project is a simple web page with features for adding pc build components and its prices, 
-          calculating the total cost for the build.
-Features:
-- Web Page header with project name, styled properly
-- Interactive center table for adding components, should have columns name and price
-- Center table lines should be auto colered depending on inputted price. Colors:
--- Green if its representing less than 10% of total cost.
--- Yellow if its representing more than 10% and less than 20% of total cost.
--- Red if its representing more than 20% of total cost.
-- Should have a copy button to copy center table to clipboard.
+
+Overview: This project is a simple web page with features for adding pc build components and its prices, calculating the total cost for the build.
+
+Scope: The PC Build Cost Calculator is a single-page web application that does not persist data across sessions. 
+        It will run in a single framework and be deployed on the Vercel platform. 
+        The application will not require user authentication or additional security measures.
+
+Framework: <chosen framework>
+
+Product Functions:
+1. Display a styled header with the project name.
+2. Provide an interactive table for adding and displaying PC components and their prices.
+3. Calculate and display the total cost of the build.
+4. Color-code table rows based on the component price relative to the total cost.
+5. Include a button to copy the table content to the clipboard.
+
+Operating Environment
+1. The application will be deployed on the Vercel platform.
+2. It should function correctly on modern web browsers (e.g., Chrome, Firefox, Edge, Safari).
+
+Functional Requirements:
+1. Web Page Header
+- Description: Display a styled header with the project name.
+- Inputs: None
+- Outputs: Visible header at the top of the page.
+- Functionality: The header will be styled to be visually appealing.
+2. Interactive Center Table
+- Description: Provide an interactive table for adding PC components.
+- Inputs: Component name and price entered by the user.
+- Outputs: Displayed component list with prices and color-coded rows.
+- Functionality: The table will have two columns: component name and price.
+    Rows will be auto-colored based on the price:
+    Green: Less than 10% of the total cost.
+    Yellow: Between 10% and 20% of the total cost.
+    Red: More than 20% of the total cost.
+3. Copy Table to Clipboard
+- Description: Provide a button to copy the table content to the clipboard.
+- Inputs: User clicks the copy button.
+- Outputs: Table content copied to the clipboard.
+- Functionality: A button will be available to copy the entire table content.
+
+Non-Functional Requirements:
+1. Security Requirements:
+No additional security features required as the page is public and does not involve login.
+2. Usability Requirements:
+The user interface should be simple and intuitive.
+The application should provide clear feedback for user actions (e.g., confirmation message when copying to clipboard).
+
 Routes:
-- root endpoint for the single page: /
-Deploy:
-- Deployment on Vercel platform, project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository. 
+1. root endpoint for the single page: /
+
+Run Environment: Deployment on Vercel platform, project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository.
+
+Technical Requirements:
+1. Project should have all files and structures needed to be run at Vercel platform.
+2. UI must be simple and easy to use.
+3. Page should work in most browsers.
+
 """)
 # Not adding framework so it wont introduce a bias into the model
