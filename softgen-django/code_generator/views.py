@@ -69,7 +69,7 @@ class OpenAIPlayground(APIView):
     def get(self, request, *args, **kwargs):
         # if not prompt:
         #     return Response({"error": "O prompt é obrigatório."}, status=status.HTTP_400_BAD_REQUEST)
-        assistant = openai_client.assistant(settings.ASSISTANT_ID)
+        assistant = openai_client.assistant(settings.CODE_ASSISTANT_ID)
         # assistant.create(
         #     name="Software Generator",
         #     instructions="You are a software engineer. Write and run working code to meet given specifications.",

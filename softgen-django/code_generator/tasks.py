@@ -9,8 +9,8 @@ from .services.vercel import vercel_manager
 from .serializers import FileSerializer, DeploymentSerializer
 import time
 from .utils import (
-    process_file_list, check_already_generated, json_load_message, 
-    get_latest_openai_messages, save_llm_run_stats
+    process_specs, process_file_list, check_already_generated, 
+    json_load_message, get_latest_openai_messages, save_llm_run_stats
 )
 
 @shared_task
@@ -25,15 +25,15 @@ def test_celery_task(software_id):
 
 @shared_task
 def create_files_task(software_id):
-    software = Software.objects.get(pk=software_id)
+    software = process_specs(Software.objects.get(pk=software_id))
     thread_id = None #settings.THREAD_ID
     failed_files = []
     
     time_start = datetime.now()
-    assistant = openai_client.assistant(settings.ASSISTANT_ID)
+    assistant = openai_client.assistant(settings.CODE_ASSISTANT_ID)
     assistant.send_message(
         #prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
-        prompt=software.processed_specs + ' Include necessary files for the project to be deployed in Vercel platform, vercel.json file must be in project root.',
+        prompt=software.processed_specs,
         thread_id=thread_id,
         #instructions='Add the necessary files for the project to be executable with the docker-compose up --build command. Add the github actions files in order to the project to be deployed on heroku with secrets.HEROKU_API_KEY saved on the github repository. The response should be in json format given in the main instructions.'
     )

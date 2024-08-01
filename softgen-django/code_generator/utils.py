@@ -1,6 +1,10 @@
 from datetime import datetime
 import json
+from textwrap import dedent
 from .serializers import LLM_Run_StatsSerializer
+from .models import Software
+from .services.openai import OpenAIClient, example_processed_specs
+from django.conf import settings
 
 def process_file_list(list: list):
     filtered_files = []
@@ -95,3 +99,33 @@ def save_llm_run_stats(
     else:
         # Dont want to raise any erros, so run wont be impacted
         print(f'Could not create LLM stats object: {serializer.errors}')
+
+def process_specs(software: Software) -> Software:
+    raw_specs = software.specs
+    assistant = OpenAIClient().assistant(settings.SPECS_ASSISTANT_ID)
+
+    proc_specs_prompt = dedent(f"""
+    Using as example the software requirement specification (SRS) that i will give you, generate a similar SRS for this software request:
+    {raw_specs}
+    End of request.
+    Software requirement specification example:
+    {example_processed_specs}
+    End of example.
+    Elements you should not modify from the example:
+    - Deployment on vercel platform and everything related to it.
+    - Choose a single framework, there should not be any database involved.
+    """)
+
+    assistant.send_message(
+        prompt=proc_specs_prompt
+    )
+    response = assistant.wait_for_run_completion()
+    assistant_messages = filter_assistant_messages(response.data)
+
+    if len(assistant_messages) > 1:
+        print('[WARNING] More than 1 message retrieved in specs processing response')
+    
+    software.processed_specs = assistant_messages[0]['srs']
+    software.save()
+
+    return software

@@ -28,7 +28,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-6@ae%65veu43hffv80#4+n3m@#cyfgi!vw40f=uld8t9(k5qk5'
 OPENAI_API_KEY = env('OPENAI_API_KEY')
-ASSISTANT_ID = env('ASSISTANT_ID')
+SPECS_ASSISTANT_ID = env('SPECS_ASSISTANT_ID')
+CODE_ASSISTANT_ID = env('CODE_ASSISTANT_ID')
 THREAD_ID = env('THREAD_ID')
 GITHUB_TOKEN = env('GITHUB_TOKEN')
 VERCEL_TOKEN = env('VERCEL_TOKEN')
