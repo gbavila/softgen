@@ -118,7 +118,7 @@ Scope: The PC Build Cost Calculator is a single-page web application that does n
         It will run in a single framework and be deployed on the Vercel platform. 
         The application will not require user authentication or additional security measures.
 
-Framework: <chosen framework>
+Framework: Django
 
 Product Functions:
 1. Display a styled header with the project name.

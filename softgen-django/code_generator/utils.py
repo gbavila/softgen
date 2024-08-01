@@ -92,7 +92,8 @@ def save_llm_run_stats(
         'model': model,
         'time_elapsed': datetime.now() - time_start
         }
-    
+    print(f"Run completed in {run_stats['time_elapsed']} s")
+
     serializer = LLM_Run_StatsSerializer(data=run_stats)
     if serializer.is_valid():
         serializer.save()
@@ -113,7 +114,7 @@ def process_specs(software: Software) -> Software:
     End of example.
     Elements you should not modify from the example:
     - Deployment on vercel platform and everything related to it.
-    - Choose a single framework, there should not be any database involved.
+    - Choose a single framework, there should not be any database involved. Change framework if needed.
     """)
 
     assistant.send_message(

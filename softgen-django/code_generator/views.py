@@ -191,7 +191,10 @@ class DeleteSoftwareView(APIView):
         software_id = request.query_params.get('software_id')
         software = get_object_or_404(Software, pk=software_id)
         if software.vercel_project_id:
-            vercel_manager.delete_project(software.vercel_project_id)
+            try:
+                vercel_manager.delete_project(software.vercel_project_id)
+            except:
+                pass
         if software.github_repo_url:
             git_manager.delete_repo_by_url(software.github_repo_url)
 
