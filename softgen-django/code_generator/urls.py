@@ -12,4 +12,5 @@ urlpatterns = [
     path('preview/', views.PreviewView.as_view(), name='preview'),
     path('status/', views.CheckGenerationView.as_view(), name='check-generation'),
     path('delete/', views.DeleteSoftwareView.as_view(), name='delete-software'),
+    path('update/', views.UpdateSoftwareView.as_view(), name='update-software'),
 ]

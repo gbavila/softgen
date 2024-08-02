@@ -24,18 +24,17 @@ def test_celery_task(software_id):
     software.save()
 
 @shared_task
-def create_files_task(software_id):
+def create_files_task(software_id: int):
+    # Use LLM to improve user uncertain specification
     software = process_specs(Software.objects.get(pk=software_id))
-    thread_id = None #settings.THREAD_ID
+    thread_id = None
     failed_files = []
     
-    time_start = datetime.now()
+    time_start = datetime.now() # for stats
     assistant = openai_client.assistant(settings.CODE_ASSISTANT_ID)
     assistant.send_message(
-        #prompt=software.processed_specs + ' Include necessary files for the project to be executable with the docker-compose up --build command.',
         prompt=software.processed_specs,
-        thread_id=thread_id,
-        #instructions='Add the necessary files for the project to be executable with the docker-compose up --build command. Add the github actions files in order to the project to be deployed on heroku with secrets.HEROKU_API_KEY saved on the github repository. The response should be in json format given in the main instructions.'
+        thread_id=thread_id
     )
 
     # Update software with LLM info
@@ -45,13 +44,9 @@ def create_files_task(software_id):
 
     # Wait OpenAI run
     messages = assistant.wait_for_run_completion()
-    #print(messages)
     
+    # dict structure with info about LLM's first response
     analysis = check_already_generated(messages.data)
-    # analysis = {'framework': 'Django', 
-    #             'failed': False, 
-    #             'generated': [{'file': '...', 'instructions': '...', 'content': '...'}, ..., {'file': '...', 'instructions': '...', 'content': '...'}], 
-    #             'files': ['file_1', ..., 'file_n']}
     
     if analysis['failed']:
         software.delete()
@@ -59,6 +54,7 @@ def create_files_task(software_id):
     
     file_list = process_file_list(analysis['files'])
     print(f'Filtered file list: {file_list}')
+
     generated_files = [msg['file'] for msg in analysis['generated']]
 
     for file_path in file_list:
@@ -122,7 +118,7 @@ def create_files_task(software_id):
         software.vercel_project_id = vercel_project_id
         software.save()
 
-        # Since the code is uploaded before the Vercel project creation, we need to trigger manually the deployment
+        # Since code is uploaded before the Vercel project creation, we need to trigger manually the deployment
         vercel_deployment = vercel_manager.create_deployment(vercel_project_id, vercel_repoId, target='production')
         print('Vercel deployment created successfully.')
 
@@ -140,26 +136,35 @@ def create_files_task(software_id):
         print(f'First {project_name} run attempt successfully started.')
 
 @shared_task
-def fix_software_task(software_id, deployment_id):
+def update_software_task(
+    software_id: int, 
+    deployment_id: str = None,
+    custom_prompt: str = None # In order to manually ask for changes
+    ):
     software = Software.objects.get(pk=software_id)
     current_files = software.files.all()
     current_file_paths = [file.path for file in current_files]
     next_version = current_files.order_by('-version').first().version + 1
 
-    threshold = 10
-    if next_version > threshold:
-        print(f'Max re-generation retries reached ({threshold}).')
-        return
+    json_format_reminder = 'Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null.'
+    if not custom_prompt:
+        threshold = 10
+        if next_version > threshold:
+            print(f'Max re-generation retries reached ({threshold}).')
+            return
 
-    logs = [event['payload']['text'] for event in vercel_manager.get_deployment_logs(deployment_id)]
-    if not logs:
-        raise Exception('Empty Vercel deployment logs')
-    
-    logs = ';\n'.join(logs)
+        logs = [event['payload']['text'] for event in vercel_manager.get_deployment_logs(deployment_id)]
+        if not logs:
+            raise Exception('Empty Vercel deployment logs')
+        logs = ';\n'.join(logs)
+        llm_prompt = f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {json_format_reminder} Logs:\n {logs}'
+    else:
+        llm_prompt = f'Some changes are required. Following, you will receive a request for changes, analyze and return the files that need to be fixed, added or removed in order to get changes done. {json_format_reminder} Request: {custom_prompt}'
+
     time_start = datetime.now()
     assistant = openai_client.assistant(software.llm_assistant_id)
     assistant.send_message(
-        prompt=f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null. Logs:\n {logs}',
+        prompt=llm_prompt,
         thread_id=software.llm_thread_id
     )
 
@@ -241,7 +246,7 @@ def fix_software_task(software_id, deployment_id):
         print(f'Re-generation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
     else:
         print('Code re-generated successfully.')
-        save_llm_run_stats(software_id, time_start)
+        save_llm_run_stats(software_id, time_start, manual_trigger=True if custom_prompt else False)
         update_software_files(software_id, next_version)
 
         print("Listing Vercel's deployments (5 retries)")

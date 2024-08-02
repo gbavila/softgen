@@ -83,12 +83,14 @@ def save_llm_run_stats(
         software_id: int,
         time_start: datetime,
         run_number: int = 1, 
+        manual_trigger: bool = False,
         model: str = 'gpt-3.5-turbo-0125'
         ) -> None:
     
     run_stats = {
         'software': software_id,
         'run_number': run_number,
+        'manual_trigger': manual_trigger,
         'model': model,
         'time_elapsed': datetime.now() - time_start
         }
@@ -112,9 +114,9 @@ def process_specs(software: Software) -> Software:
     Software requirement specification example:
     {example_processed_specs}
     End of example.
-    Elements you should not modify from the example:
+    There is no need to strictly follow the example, but elements you should not modify from the example are:
     - Deployment on vercel platform and everything related to it.
-    - Choose a single framework, there should not be any database involved. Change framework if needed.
+    - Choose a single framework, there should not be any database involved. Change framework if suited.
     """)
 
     assistant.send_message(

@@ -44,6 +44,7 @@ class LLM_Run_Stats(models.Model):
     model = models.CharField(max_length=255, default='gpt-3.5-turbo-0125')
     time_elapsed = models.DurationField(null=True)
     run_number = models.IntegerField(default=1)
+    manual_trigger = models.BooleanField(default=False) # In order to know when a re generation was manually triggered
     software = models.ForeignKey(Software, on_delete=models.CASCADE, related_name='llm_runs')
 
     def __str__(self):

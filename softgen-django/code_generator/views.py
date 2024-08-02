@@ -11,7 +11,7 @@ from .serializers import SoftwareSerializer, FileSerializer, DeploymentSerialize
 from .services.openai import openai_client
 from .services.github import git_manager
 from .services.vercel import vercel_manager
-from .tasks import create_files_task, fix_software_task
+from .tasks import create_files_task, update_software_task
 
 def index(request):
     return HttpResponse("Hello, world. You're at the Code Generator App.")
@@ -179,7 +179,7 @@ class CheckGenerationView(APIView):
                             current_deployment.url = url
                         elif new_status == 'ERROR':
                             print(f'Deployment {current_deployment.id} failed. Sending back to LLM.')
-                            fix_software_task.delay_on_commit(software_id, current_deployment.id) # async
+                            update_software_task.delay_on_commit(software_id, current_deployment.id) # async
                         current_deployment.save()
 
         return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
@@ -200,5 +200,18 @@ class DeleteSoftwareView(APIView):
 
         software.delete()
 
-        return Response({'message': f'Software {software_id} and its associated files and deployments were deleted successfully.'}) #, 'preview_content': preview_content
+        return Response({'message': f'Software {software_id} and its associated files and deployments were deleted successfully.'})
+
+class UpdateSoftwareView(APIView):
+    def patch(self, request, *args, **kwargs):
+        software_id = request.query_params.get('software_id')
+        get_object_or_404(Software, pk=software_id) # check if it exists
+
+        prompt = request.data.get('prompt')
+        if not prompt:
+            return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        update_software_task.delay_on_commit(software_id, custom_prompt=prompt) # async
+       
+        return Response({'message': f'Software {software_id} update successfully started.'}) 
     

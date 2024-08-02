@@ -68,7 +68,7 @@
                     const softwareId = '{{ software.id }}';
                     const prompt = document.getElementById('prompt-input').value;
                     fetch(`/update?software_id=${softwareId}`, {
-                        method: 'POST',
+                        method: 'PATCH',
                         headers: {
                             'Content-Type': 'application/json',
                         },
