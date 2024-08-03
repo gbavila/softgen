@@ -146,7 +146,7 @@ def update_software_task(
     current_file_paths = [file.path for file in current_files]
     next_version = current_files.order_by('-version').first().version + 1
 
-    json_format_reminder = 'Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null.'
+    json_format_reminder = 'Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null. Do not create a "files" field with a list of the specified structures, return files in different messages.'
     if not custom_prompt:
         threshold = 10
         if next_version > threshold:
@@ -267,7 +267,9 @@ def update_software_task(
         deployment = {'id': latest_deployment.get('uid'),
                       'software': software.id,
                       'vercel_repoId': latest_deployment.get('githubRepoId'),
-                      'status': latest_deployment.get('state')} # for some reason this endpoint does not have status, maybe because its a /v6
+                      'status': 'QUEUED' # forcing queued so it changes state when checking from preview page
+                      } 
+        # latest_deployment.get('state') for some reason this endpoint does not have status, maybe because its a /v6
         serializer = DeploymentSerializer(data=deployment)
         if serializer.is_valid():
             serializer.save()

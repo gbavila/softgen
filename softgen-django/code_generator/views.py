@@ -140,10 +140,6 @@ class PreviewView(APIView):
     def get(self, request, *args, **kwargs):
         software_id = request.query_params.get('software_id')
         software = Software.objects.get(pk=software_id)
-        #preview_content = request.session.get('preview_content', 'Preview não disponível.')
-        # limpar o preview_content da sessão após o uso
-        #request.session.pop('preview_content', None)
-
         return render(request, 'preview.html', {'software': software}) #, 'preview_content': preview_content
 
 class CheckGenerationView(APIView):
@@ -167,6 +163,7 @@ class CheckGenerationView(APIView):
             else:
                 current_deployment = deployments.order_by('-created_at').first()
                 if current_deployment:
+                    vercel_url = current_deployment.url
                     updated_deployment = vercel_manager.get_deployment_by_id(current_deployment.id)
                     new_status = updated_deployment['status']
                     deployment_status = new_status
@@ -174,7 +171,8 @@ class CheckGenerationView(APIView):
                     if new_status != current_deployment.status:
                         current_deployment.status = new_status
                         if new_status == 'READY':
-                            url = updated_deployment['url']
+                            #url = updated_deployment['url']
+                            url = updated_deployment['alias'][0]
                             vercel_url = url
                             current_deployment.url = url
                         elif new_status == 'ERROR':
@@ -183,8 +181,6 @@ class CheckGenerationView(APIView):
                         current_deployment.save()
 
         return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
-    
-# Criar endpoint para correção quando o dep dá ready mas o user quer mudar alguma coisa ou vê manualmente que algo deu errado
 
 class DeleteSoftwareView(APIView):
     def delete(self, request, *args, **kwargs):
@@ -205,12 +201,15 @@ class DeleteSoftwareView(APIView):
 class UpdateSoftwareView(APIView):
     def patch(self, request, *args, **kwargs):
         software_id = request.query_params.get('software_id')
-        get_object_or_404(Software, pk=software_id) # check if it exists
-
+        software = get_object_or_404(Software, pk=software_id)
+        
         prompt = request.data.get('prompt')
         if not prompt:
             return Response({'error': 'Prompt is required.'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Setting generation status to False so preview page keeps seraching for updates
+        software.generation_finished = False
+        software.save()
         update_software_task.delay_on_commit(software_id, custom_prompt=prompt) # async
        
         return Response({'message': f'Software {software_id} update successfully started.'}) 
