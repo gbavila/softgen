@@ -13,6 +13,8 @@ from .utils import (
     json_load_message, get_latest_openai_messages, save_llm_run_stats
 )
 
+JSON_FORMAT_REMINDER = 'Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null. Do not create a "files" field with a list of the specified structures, return files in different messages.'
+
 @shared_task
 def test_celery_task(software_id):
     # Simula uma operação de longa duração
@@ -94,46 +96,64 @@ def create_files_task(software_id: int):
         else:
             print(serializer.errors)
             failed_files.append({'file':file_path, 'llm_response': response})
-    
-    software.generation_finished = True
-    software.save()
 
-    if failed_files:
-        print(f'Creation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
-    else:
-        print('Code generated successfully.')
-        save_llm_run_stats(software_id, time_start)
-
-        project_name = f"softgen-{software_id}"
-        upload_software_to_github(project_name, software_id)
-        software = Software.objects.get(pk=software_id)
-
-        vercel_response = vercel_manager.create_project(name = project_name, 
-                                                        github_repo = project_name)
-        print('Vercel project created successfully.')
-
-        vercel_project_id = vercel_response.get('id')
-        vercel_repoId = vercel_response.get('link').get('repoId')
-        
-        software.vercel_project_id = vercel_project_id
-        software.save()
-
-        # Since code is uploaded before the Vercel project creation, we need to trigger manually the deployment
-        vercel_deployment = vercel_manager.create_deployment(vercel_project_id, vercel_repoId, target='production')
-        print('Vercel deployment created successfully.')
-
-        deployment = {'id': vercel_deployment.get('id'),
-                      'software': software.id,
-                      'vercel_repoId': vercel_repoId,
-                      'status': vercel_deployment.get('status')}
-        serializer = DeploymentSerializer(data=deployment)
-        if serializer.is_valid():
-            serializer.save()
+    try:
+        if failed_files:
+            print(f'Creation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
         else:
-            print(serializer.errors)
-            raise Exception(f'Error creating deployment in database: {serializer.errors}')
-        
-        print(f'First {project_name} run attempt successfully started.')
+            print('Code generated successfully.')
+            save_llm_run_stats(software_id, time_start)
+
+            project_name = f"softgen-{software_id}"
+            upload_software_to_github(project_name, software_id)
+            software = Software.objects.get(pk=software_id)
+
+            vercel_response = vercel_manager.create_project(name = project_name, 
+                                                            github_repo = project_name)
+            print('Vercel project created successfully.')
+
+            vercel_project_id = vercel_response.get('id')
+            vercel_repoId = vercel_response.get('link').get('repoId')
+            
+            software.vercel_project_id = vercel_project_id
+            software.save()
+
+            # Since code is uploaded before the Vercel project creation, we need to trigger manually the deployment
+            deployment_retries = 0
+            MAX_RETRIES = 5
+            while deployment_retries < MAX_RETRIES:
+                try:
+                    vercel_deployment = vercel_manager.create_deployment(vercel_project_id, vercel_repoId, target='production')
+                    break # if succeeded
+                except Exception as ex:
+                    # If error is 400, llm did something wrong, so it needs to correct something. Otherwise, a problem actually happened
+                    if not 'error 400' in str(ex).lower():
+                        raise
+                    print(f'Exception occurred while creating vercel deployment, sending back to LLM. {ex}')
+                    update_software_task(software_id, custom_prompt=F'Vercel deployment creation resulted in error. Following, you will receive the deployment error, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {JSON_FORMAT_REMINDER}. Error: {ex}')
+                deployment_retries += 1
+                if deployment_retries == MAX_RETRIES:
+                    raise Exception('Max deployment creation retries exceeded.')
+
+            print('Vercel deployment created successfully.')
+
+            deployment = {'id': vercel_deployment.get('id'),
+                        'software': software.id,
+                        'vercel_repoId': vercel_repoId,
+                        'status': vercel_deployment.get('status')}
+            serializer = DeploymentSerializer(data=deployment)
+            if serializer.is_valid():
+                serializer.save()
+            else:
+                print(serializer.errors)
+                raise Exception(f'Error creating deployment in database: {serializer.errors}')
+            
+            print(f'First {project_name} run attempt successfully started.')
+    except:
+        raise
+    finally:
+        software.generation_finished = True
+        software.save()
 
 @shared_task
 def update_software_task(
@@ -146,7 +166,6 @@ def update_software_task(
     current_file_paths = [file.path for file in current_files]
     next_version = current_files.order_by('-version').first().version + 1
 
-    json_format_reminder = 'Remember to use the expected json format, responses with content for each file separately and you must answer with a json containing 3 fields: "file", "instructions" and "content". If a file needs to be removed, just return the content field null. Do not create a "files" field with a list of the specified structures, return files in different messages.'
     if not custom_prompt:
         threshold = 10
         if next_version > threshold:
@@ -157,9 +176,9 @@ def update_software_task(
         if not logs:
             raise Exception('Empty Vercel deployment logs')
         logs = ';\n'.join(logs)
-        llm_prompt = f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {json_format_reminder} Logs:\n {logs}'
+        llm_prompt = f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {JSON_FORMAT_REMINDER} Logs:\n {logs}'
     else:
-        llm_prompt = f'Some changes are required. Following, you will receive a request for changes, analyze and return the files that need to be fixed, added or removed in order to get changes done. {json_format_reminder} Request: {custom_prompt}'
+        llm_prompt = f'Some changes are required. Following, you will receive a request for changes, analyze and return the files that need to be fixed, added or removed in order to get changes done. {JSON_FORMAT_REMINDER} Request: {custom_prompt}'
 
     time_start = datetime.now()
     assistant = openai_client.assistant(software.llm_assistant_id)

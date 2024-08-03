@@ -150,13 +150,14 @@ class CheckGenerationView(APIView):
         except Software.DoesNotExist:
             return Response({'error': 'Software not found'}, status=404)
         
+        processed_specs = software.processed_specs
         status = software.generation_finished
         repo_url = software.github_repo_url
         vercel_url = None
         deployment_status = None
 
         vercel_project_id = software.vercel_project_id        
-        if vercel_project_id:
+        if status and vercel_project_id: # wait current generation finish
             deployments = software.deployments
             if not deployments or deployments == None:
                 print('There is still no deployment created.')
@@ -180,7 +181,8 @@ class CheckGenerationView(APIView):
                             update_software_task.delay_on_commit(software_id, current_deployment.id) # async
                         current_deployment.save()
 
-        return Response({'generation_finished': status, 'github_url': repo_url, 'deployment_status': deployment_status, 'vercel_url': vercel_url})
+        return Response({'generation_finished': status, 'processed_specs': processed_specs, 'github_url': repo_url, 
+                         'deployment_status': deployment_status, 'vercel_url': vercel_url})
 
 class DeleteSoftwareView(APIView):
     def delete(self, request, *args, **kwargs):
