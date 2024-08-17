@@ -78,3 +78,37 @@ body, html {
 #update-input-box button:active {
     transform: scale(0.98);
 }
+
+.upper-preview {
+    display: flex;
+    align-items: center; /* Alinha os itens ao longo do eixo vertical (centrado) */
+    gap: 10px; /* Espaçamento entre os itens, ajuste conforme necessário */
+}
+
+#status-box {
+    flex-grow: 1; /* O status-box ocupará o espaço restante */
+}
+
+#delete-box {
+    flex-shrink: 0; /* O delete-box manterá seu tamanho definido */
+}
+
+.upper-preview #delete-box button {
+    background-color: rgb(220, 44, 44);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.upper-preview #delete-box button:hover {
+    background-color: rgb(255, 71, 71);
+}
+
+.upper-preview #delete-box button:active {
+    transform: scale(0.98);
+}
