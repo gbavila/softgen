@@ -212,7 +212,7 @@ class UpdateSoftwareView(APIView):
         # Setting generation status to False so preview page keeps seraching for updates
         software.generation_finished = False
         software.save()
-        update_software_task.delay_on_commit(software_id, custom_prompt=prompt) # async
+        update_software_task.delay_on_commit(software_id, custom_prompt=prompt, check_threshold=False) # async
        
         return Response({'message': f'Software {software_id} update successfully started.'}) 
     

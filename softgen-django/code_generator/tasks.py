@@ -130,7 +130,10 @@ def create_files_task(software_id: int):
                     if not 'error 400' in str(ex).lower():
                         raise
                     print(f'Exception occurred while creating vercel deployment, sending back to LLM. {ex}')
-                    update_software_task(software_id, custom_prompt=F'Vercel deployment creation resulted in error. Following, you will receive the deployment error, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {JSON_FORMAT_REMINDER}. Error: {ex}')
+                    update_software_task(
+                        software_id, 
+                        custom_prompt=F'Vercel deployment creation resulted in error. Following, you will receive the deployment error, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {JSON_FORMAT_REMINDER}. Error: {ex}'
+                        )
                 deployment_retries += 1
                 if deployment_retries == MAX_RETRIES:
                     raise Exception('Max deployment creation retries exceeded.')
@@ -159,26 +162,33 @@ def create_files_task(software_id: int):
 def update_software_task(
     software_id: int, 
     deployment_id: str = None,
-    custom_prompt: str = None # In order to manually ask for changes
+    custom_prompt: str = None, # In order to manually ask for changes
+    check_threshold: bool = True
     ):
     software = Software.objects.get(pk=software_id)
     current_files = software.files.all()
     current_file_paths = [file.path for file in current_files]
     next_version = current_files.order_by('-version').first().version + 1
 
-    if not custom_prompt:
+    if check_threshold:
         threshold = 10
         if next_version > threshold:
             print(f'Max re-generation retries reached ({threshold}).')
             return
 
+    if deployment_id:
         logs = [event['payload']['text'] for event in vercel_manager.get_deployment_logs(deployment_id)]
+        deployment = Deployment.objects.get(pk=deployment_id)
+        deployment.errors = '\n'.join(logs)
+        deployment.save()
         if not logs:
             raise Exception('Empty Vercel deployment logs')
         logs = ';\n'.join(logs)
         llm_prompt = f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {JSON_FORMAT_REMINDER} Logs:\n {logs}'
-    else:
+    elif custom_prompt:
         llm_prompt = f'Some changes are required. Following, you will receive a request for changes, analyze and return the files that need to be fixed, added or removed in order to get changes done. {JSON_FORMAT_REMINDER} Request: {custom_prompt}'
+    else:
+        raise ValueError('Either custom_prompt or deployment_id must have a value.')
 
     time_start = datetime.now()
     assistant = openai_client.assistant(software.llm_assistant_id)
@@ -271,9 +281,10 @@ def update_software_task(
         print("Listing Vercel's deployments (5 retries)")
         retries = 5
         while retries > 0:
-            latest_deployment = vercel_manager.list_deployments(software.vercel_project_id)['deployments'][0]  
+            latest_deployment = vercel_manager.list_deployments(software.vercel_project_id, 'production')['deployments'][0]  
             try:
                 deployment = Deployment.objects.get(id=latest_deployment.get('uid'))
+                # if found, there is no new deployment yet
                 if retries != 1:
                     print(f'Could not find new Vercel deployment. {retries} retries left.')
                     time.sleep(4)

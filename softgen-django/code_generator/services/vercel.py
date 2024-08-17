@@ -23,6 +23,9 @@ class VercelManager:
             except json.JSONDecodeError:
                 error_message = response.text
             raise Exception(f'Error {response.status_code}: {error_message}')
+    
+    def filter_target_deployments(self, json_response: list[dict], target: str):
+        return [deployment for deployment in json_response if json_response.get('target') == target]
 
     def create_project(self, name, github_repo):
         url = f'{self.api_url}/v10/projects'
@@ -48,11 +51,11 @@ class VercelManager:
         response = requests.post(url, headers=self.headers, json=data)
         return self.handle_response(response)
 
-    def list_deployments(self, project_id):
+    def list_deployments(self, project_id, target=None):
         url = f'{self.api_url}/v6/deployments'
         params = {'projectId': project_id}
         response = requests.get(url, headers=self.headers, params=params)
-        return self.handle_response(response)
+        return self.filter_target_deployments(self.handle_response(response), target)
 
     def get_deployment_by_id(self, deployment_id):
         url = f'{self.api_url}/v13/deployments/{deployment_id}'

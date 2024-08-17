@@ -115,25 +115,25 @@ Project: PC Build Cost Calculator
 Overview: This project is a simple web page with features for adding pc build components and its prices, calculating the total cost for the build.
 
 Scope: The PC Build Cost Calculator is a single-page web application that does not persist data across sessions. 
-        It will run in a single framework and be deployed on the Vercel platform. 
+        It will run in a single framework and be deployed on Vercel's platform. 
         The application will not require user authentication or additional security measures.
 
 Framework: Django
 
 Product Functions:
-1. Display a styled header with the project name.
+1. Display a styled header with project name.
 2. Provide an interactive table for adding and displaying PC components and their prices.
-3. Calculate and display the total cost of the build.
+3. Calculate and display total cost of the build.
 4. Color-code table rows based on the component price relative to the total cost.
 5. Include a button to copy the table content to the clipboard.
 
 Operating Environment
-1. The application will be deployed on the Vercel platform.
+1. The application will be deployed on Vercel's platform.
 2. It should function correctly on modern web browsers (e.g., Chrome, Firefox, Edge, Safari).
 
 Functional Requirements:
 1. Web Page Header
-- Description: Display a styled header with the project name.
+- Description: Display a styled header with project name.
 - Inputs: None
 - Outputs: Visible header at the top of the page.
 - Functionality: The header will be styled to be visually appealing.
@@ -143,9 +143,9 @@ Functional Requirements:
 - Outputs: Displayed component list with prices and color-coded rows.
 - Functionality: The table will have two columns: component name and price.
     Rows will be auto-colored based on the price:
-    Green: Less than 10% of the total cost.
-    Yellow: Between 10% and 20% of the total cost.
-    Red: More than 20% of the total cost.
+    Green: Less than 10% of total cost.
+    Yellow: Between 10% and 20% of total cost.
+    Red: More than 20% of total cost.
 3. Copy Table to Clipboard
 - Description: Provide a button to copy the table content to the clipboard.
 - Inputs: User clicks the copy button.
@@ -162,7 +162,7 @@ The application should provide clear feedback for user actions (e.g., confirmati
 Routes:
 1. root endpoint for the single page: /
 
-Run Environment: Deployment on Vercel platform, project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository.
+Run Environment: Deployment on Vercel platform. Project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository.
 
 Technical Requirements:
 1. Project should have all files and structures needed to be run at Vercel platform.
