@@ -6,7 +6,7 @@ from django.conf import settings
 from .services.openai import openai_client
 from .services.github import git_manager, upload_software_to_github, update_software_files
 from .services.vercel import vercel_manager
-from .serializers import FileSerializer, DeploymentSerializer
+from .serializers import FileSerializer, DeploymentSerializer, LLM_Run_Stats
 import time
 from .utils import (
     process_specs, process_file_list, check_already_generated, 
@@ -171,13 +171,12 @@ def update_software_task(
     check_threshold: bool = True
     ):
     software = Software.objects.get(pk=software_id)
-    current_files = software.files.all()
-    current_file_paths = [file.path for file in current_files]
-    next_version = current_files.order_by('-version').first().version + 1
+    runs = LLM_Run_Stats.objects.filter(software_id=software_id)
+    next_run_version = runs.order_by('-run_number').first().run_number + 1
 
     if check_threshold:
-        threshold = 10
-        if next_version > threshold:
+        threshold = 15
+        if next_run_version > threshold:
             print(f'Max re-generation retries reached ({threshold}).')
             return
 
@@ -219,7 +218,9 @@ def update_software_task(
     # When regenerating, usually LLM does not send that first message with file list and framework
     file_list = process_file_list(analysis['files']) if analysis['files'] else generated_files
     print(f'Filtered file list: {file_list}')
-    
+
+    current_files = software.files.all()
+    current_file_paths = [file.path for file in current_files]
     failed_files = []
 
     for file_path in file_list:
@@ -255,7 +256,7 @@ def update_software_task(
 
         if cleaned_file_path in current_file_paths:
             file = current_files.filter(path=cleaned_file_path)[0]
-            file.version = next_version
+            file.version = file.version + 1
             file.content = file_content
             file.instructions = instructions
             try:
@@ -279,6 +280,7 @@ def update_software_task(
     save_llm_run_stats(
         software_id, 
         time_start, 
+        run_number= next_run_version,
         manual_trigger=True if custom_prompt else False,
         success=True if not failed_files else False,
         model='gpt-3.5-turbo-0125'
@@ -287,7 +289,7 @@ def update_software_task(
         print(f'Re-generation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
     else:
         print('Code re-generated successfully.')
-        update_software_files(software_id, next_version)
+        update_software_files(software_id, next_run_version)
 
         print("Listing Vercel's deployments (5 retries)")
         retries = 5
