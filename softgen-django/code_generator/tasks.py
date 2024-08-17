@@ -97,12 +97,17 @@ def create_files_task(software_id: int):
             print(serializer.errors)
             failed_files.append({'file':file_path, 'llm_response': response})
 
+    save_llm_run_stats(
+        software_id, 
+        time_start,
+        success=True if not failed_files else False,
+        model='gpt-3.5-turbo-0125'
+        )
     try:
         if failed_files:
             print(f'Creation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
         else:
             print('Code generated successfully.')
-            save_llm_run_stats(software_id, time_start)
 
             project_name = f"softgen-{software_id}"
             upload_software_to_github(project_name, software_id)
@@ -271,11 +276,17 @@ def update_software_task(
                 print(serializer.errors)
                 failed_files.append({'file':file_path, 'llm_response': response})
 
+    save_llm_run_stats(
+        software_id, 
+        time_start, 
+        manual_trigger=True if custom_prompt else False,
+        success=True if not failed_files else False,
+        model='gpt-3.5-turbo-0125'
+        )
     if failed_files:
         print(f'Re-generation errors ({len(failed_files)}/{len(file_list)}): {failed_files}')
     else:
         print('Code re-generated successfully.')
-        save_llm_run_stats(software_id, time_start, manual_trigger=True if custom_prompt else False)
         update_software_files(software_id, next_version)
 
         print("Listing Vercel's deployments (5 retries)")

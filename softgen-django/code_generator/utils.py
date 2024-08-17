@@ -84,6 +84,8 @@ def save_llm_run_stats(
         time_start: datetime,
         run_number: int = 1, 
         manual_trigger: bool = False,
+        success: bool = True,
+        specs_proc_run: bool = False,
         model: str = 'gpt-3.5-turbo-0125'
         ) -> None:
     
@@ -91,6 +93,8 @@ def save_llm_run_stats(
         'software': software_id,
         'run_number': run_number,
         'manual_trigger': manual_trigger,
+        'success': success,
+        'specs_proc_run': specs_proc_run,
         'model': model,
         'time_elapsed': datetime.now() - time_start
         }
@@ -105,6 +109,7 @@ def save_llm_run_stats(
 
 def process_specs(software: Software) -> Software:
     raw_specs = software.specs
+    time_start = datetime.now() # for stats
     assistant = OpenAIClient().assistant(settings.SPECS_ASSISTANT_ID)
 
     proc_specs_prompt = dedent(f"""
@@ -130,5 +135,12 @@ def process_specs(software: Software) -> Software:
     
     software.processed_specs = assistant_messages[0]['srs']
     software.save()
+
+    save_llm_run_stats(
+        software.id, 
+        time_start,
+        specs_proc_run=True,
+        model='gpt-3.5-turbo-0125'
+        )
 
     return software

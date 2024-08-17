@@ -45,6 +45,8 @@ class LLM_Run_Stats(models.Model):
     time_elapsed = models.DurationField(null=True) # currently stores as seconds * 1000000
     run_number = models.IntegerField(default=1)
     manual_trigger = models.BooleanField(default=False) # In order to know when a re generation was manually triggered
+    success = models.BooleanField(default=True)
+    specs_proc_run = models.BooleanField(default=False)
     software = models.ForeignKey(Software, on_delete=models.CASCADE, related_name='llm_runs')
 
     def __str__(self):
