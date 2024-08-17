@@ -79,10 +79,6 @@ class OpenAIClient:
                         print(f"Run completed in {formatted_elapsed_time}")
                         messages = self.client.beta.threads.messages.list(thread_id=self.thread_id)
                         return messages
-                        # last_message = messages.data[0]
-                        # response = last_message.content[0].text.value
-                        # print(f"Assistant Response: {response}")
-                        # return response
                 except Exception as e:
                     raise Exception(f"An error occurred while retrieving the run: {e}")
                 print("Waiting for run to complete...")

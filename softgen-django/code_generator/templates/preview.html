@@ -26,12 +26,12 @@
             <div class="upper-preview">
                 <div id="status-box">Aguardando atualização...</div>
                 <div id="delete-box" style="display: none;">
-                    <button onclick="DeleteSoftware()">Deletar</button>
+                    <button onclick="deleteSoftware()">Deletar</button>
                 </div>
             </div>
             <br>
             <div id="iframe-container">
-                <!-- <iframe src="https://softgen-52.vercel.app/" title="Generated Web Page Preview"></iframe> -->
+                <!-- <iframe src="https://softgen-id.vercel.app/" title="Generated Web Page Preview"></iframe> -->
             </div>
             <br>
             <div id="update-input-box" style="display: none;">
@@ -102,7 +102,7 @@
                     });
                 }
 
-                function DeleteSoftware() {
+                function deleteSoftware() {
                     if (confirm("Tem certeza de que deseja deletar este projeto? O repositório no GitHub e projeto na Vercel também serão removidos.")) {
                         const softwareId = '{{ software.id }}';
                         fetch(`/delete/?software_id=${softwareId}`, {
