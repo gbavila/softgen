@@ -178,11 +178,11 @@ def update_software_task(
 
     if deployment_id:
         logs = [event['payload']['text'] for event in vercel_manager.get_deployment_logs(deployment_id)]
+        if not logs:
+            raise Exception('Empty Vercel deployment logs')
         deployment = Deployment.objects.get(pk=deployment_id)
         deployment.errors = '\n'.join(logs)
         deployment.save()
-        if not logs:
-            raise Exception('Empty Vercel deployment logs')
         logs = ';\n'.join(logs)
         llm_prompt = f'Vercel deployment resulted in error. Following, you will receive the deployment logs, analyze and return the files that need to be fixed, added or removed in order to get the deployment running correctly. {JSON_FORMAT_REMINDER} Logs:\n {logs}'
     elif custom_prompt:
