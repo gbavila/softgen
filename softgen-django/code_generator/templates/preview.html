@@ -48,7 +48,7 @@
                         .then(response => response.json())
                         .then(data => {
                             console.log(data);
-                            document.getElementById('software-proc-specs').innerHTML = data.processed_specs // rewrite with llm's specs
+                            document.getElementById('software-proc-specs').innerHTML = data.processed_specs.replace(/\n/g, '<br>') // rewrite with llm's specs
                             if (data.generation_finished && data.github_url == null) {
                                 document.getElementById('status-box').innerHTML = 'Geração de Código finalizada.<br>Enviando código para o Github...';
                                 setTimeout(checkForUpdates, update_interval);
