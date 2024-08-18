@@ -298,7 +298,7 @@ def update_software_task(
 
             print("Listing Vercel's deployments (5 retries)")
             retries = 5
-            sleep_interval = 5
+            sleep_interval = 10
             while retries > 0:
                 deployments = vercel_manager.list_deployments(software.vercel_project_id, 'production')['deployments']
                 if deployments:
@@ -310,18 +310,25 @@ def update_software_task(
                             print(f'Could not find new Vercel deployment. {retries} retries left.')
                             time.sleep(sleep_interval)
                         else:
-                            raise Exception(f'Could not find a new deployment for software {software_id}')
+                            print(f'Could not find a new deployment for software {software_id}. Creating manually.')
+                            latest_deployment = vercel_manager.create_deployment(software.vercel_project_id, deployment.vercel_repoId, target='production')
+                            deployment_id = latest_deployment.get('id')
+                            vercel_repoId = deployment.vercel_repoId
+                            break
                     except Deployment.DoesNotExist:
+                        deployment_id = latest_deployment.get('uid')
+                        vercel_repoId = latest_deployment.get('meta').get('githubRepoId')
                         break
                 else:
                     time.sleep(sleep_interval)
                 retries -= 1
 
-            deployment = {'id': latest_deployment.get('uid'),
-                        'software': software.id,
-                        'vercel_repoId': latest_deployment.get('githubRepoId'),
-                        'status': 'QUEUED' # forcing queued so it changes state when checking from preview page
-                        } 
+            deployment = {
+                'id': deployment_id,
+                'software': software.id,
+                'vercel_repoId': vercel_repoId,
+                'status': 'QUEUED' # forcing queued so it changes state when checking from preview page
+                } 
             # latest_deployment.get('state') for some reason this endpoint does not have status, maybe because its a /v6
             serializer = DeploymentSerializer(data=deployment)
             if serializer.is_valid():
