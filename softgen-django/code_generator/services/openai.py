@@ -88,6 +88,8 @@ class OpenAIClient:
                         self.fail_retries += 1
                         if fail_case_prompt and self.fail_retries <= 3:
                             print(f"Run failed with {status} state. Executing fail case prompt...")
+                            if self.current_run.last_error.code == 'rate_limit_exceeded':
+                                time.sleep(60) # GPT-4o TPM is 30000
                             self.send_message(prompt=fail_case_prompt)
                         else:
                             raise Exception(f'Run failed with {status} state.')

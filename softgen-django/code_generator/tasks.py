@@ -45,7 +45,7 @@ def create_files_task(software_id: int):
     software.save()
 
     # Wait OpenAI run
-    messages = assistant.wait_for_run_completion()
+    messages = assistant.wait_for_run_completion(fail_case_prompt=software.processed_specs)
     
     # dict structure with info about LLM's first response
     analysis = check_already_generated(messages.data)
@@ -176,12 +176,13 @@ def update_software_task(
     next_run_version = runs.order_by('-run_number').first().run_number + 1
 
     if check_threshold:
-        threshold = 10
+        threshold = 3
         if next_run_version > threshold:
             print(f'Max re-generation retries reached ({threshold}).')
             return
 
     if deployment_id:
+        time.sleep(20) # there is a delay between a deployment fail and complete logs available
         logs = [event['payload']['text'] for event in vercel_manager.get_deployment_logs(deployment_id)]
         if not logs:
             raise Exception('Empty Vercel deployment logs')
@@ -203,7 +204,7 @@ def update_software_task(
     )
 
     # Wait OpenAI run
-    messages = assistant.wait_for_run_completion()
+    messages = assistant.wait_for_run_completion(fail_case_prompt=llm_prompt)
     #messages = assistant.get_thread_messages(software.llm_thread_id)
 
     # Retrieve msgs given in response to last prompt
@@ -328,8 +329,7 @@ def update_software_task(
                 'software': software.id,
                 'vercel_repoId': vercel_repoId,
                 'status': 'QUEUED' # forcing queued so it changes state when checking from preview page
-                } 
-            # latest_deployment.get('state') for some reason this endpoint does not have status, maybe because its a /v6
+                }
             serializer = DeploymentSerializer(data=deployment)
             if serializer.is_valid():
                 serializer.save()
