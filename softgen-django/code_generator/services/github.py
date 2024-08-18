@@ -125,7 +125,7 @@ def upload_software_to_github(repository, software_id):
 
 def update_software_files(software_id, version):
     software = Software.objects.get(pk=software_id)
-    files = software.files.filter(version=version)
+    files = software.files.filter(last_run_version_change=version)
     
     if not files:
         raise ValueError(f"No files found with version {version} for software id {software_id}.")

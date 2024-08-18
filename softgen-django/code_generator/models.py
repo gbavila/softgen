@@ -22,6 +22,7 @@ class File(models.Model):
     # related_name='files' allows files from a software to be accessed through software.files
     path = models.CharField(max_length=255)
     version = models.IntegerField()
+    last_run_version_change = models.IntegerField(default=1)
     content = models.TextField(blank=True)
     instructions = models.CharField(max_length=72, null=True) # this will be used as github commit message
 
@@ -41,7 +42,7 @@ class Deployment(models.Model):
         return f"{self.name}: {self.status}"
 
 class LLM_Run_Stats(models.Model):
-    model = models.CharField(max_length=255, default='gpt-3.5-turbo-0125')
+    model = models.CharField(max_length=255, default='gpt-4o-mini')
     time_elapsed = models.DurationField(null=True) # currently stores as seconds * 1000000
     run_number = models.IntegerField(default=1)
     manual_trigger = models.BooleanField(default=False) # In order to know when a re generation was manually triggered

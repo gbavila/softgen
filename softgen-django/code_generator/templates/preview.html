@@ -53,13 +53,13 @@
                                 document.getElementById('status-box').innerHTML = 'Geração de Código finalizada.<br>Enviando código para o Github...';
                                 setTimeout(checkForUpdates, update_interval);
                             } else if (data.generation_finished && data.github_url != null) {
+                                document.getElementById('delete-box').style.display = 'block';
                                 let statusHTML = 'Geração de Código finalizada:<br><a href="' + data.github_url + '">' + data.github_url + '</a>';
                                 if (data.deployment_status != null) {
                                     statusHTML += '<br>Deployment Status (Vercel): ' + data.deployment_status;
                                     if (data.vercel_url != null) {
                                         statusHTML += '<br>Vercel URL: <a href="https://' + data.vercel_url + '">' + data.vercel_url + '</a>';
                                         document.getElementById('iframe-container').innerHTML = '<iframe src="https://' + data.vercel_url + '" title="Generated Web Page Preview"></iframe>';
-                                        document.getElementById('delete-box').style.display = 'block';
                                     }
                                     if (data.deployment_status === 'READY') {
                                         document.getElementById('update-input-box').style.display = 'block';

@@ -24,8 +24,9 @@ class VercelManager:
                 error_message = response.text
             raise Exception(f'Error {response.status_code}: {error_message}')
     
-    def filter_target_deployments(self, json_response: list[dict], target: str):
-        return [deployment for deployment in json_response if json_response.get('target') == target]
+    def filter_target_deployments(self, json_response: dict, target: str):
+        json_response['deployments'] = [deployment for deployment in json_response['deployments'] if deployment.get('target') == target]
+        return json_response
 
     def create_project(self, name, github_repo):
         url = f'{self.api_url}/v10/projects'

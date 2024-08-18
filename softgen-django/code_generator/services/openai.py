@@ -8,7 +8,7 @@ class OpenAIClient:
         self.client = OpenAI()
         self.client.api_key = settings.OPENAI_API_KEY
 
-    def generate_text(self, prompt, model="gpt-3.5-turbo-0125", **kwargs):
+    def generate_text(self, prompt, model="gpt-4o-mini", **kwargs):
         response = self.client.chat.completions.create(
             messages=[
                 {
@@ -27,8 +27,9 @@ class OpenAIClient:
             # Option to use existing assistant
             if assistant_id is not None:
                 self.assistant_id = assistant_id
+            self.fail_retries = 0
 
-        def create(self, name, instructions, model="gpt-3.5-turbo-0125", **kwargs):
+        def create(self, name, instructions, model="gpt-4o-mini", **kwargs):
             self.assistant = self.client.beta.assistants.create(
                 name=name,
                 instructions=instructions,
@@ -69,16 +70,27 @@ class OpenAIClient:
             else:
                 print(self.current_run.status)
 
-        def wait_for_run_completion(self, sleep_interval=5):
+        def wait_for_run_completion(self, sleep_interval=5, fail_case_prompt=None):
+            fail_states = {"failed", "expired"}
             while True:
                 try:
                     self.current_run = self.client.beta.threads.runs.retrieve(thread_id=self.thread_id, run_id=self.current_run.id)
                     if self.current_run.completed_at:
+                        self.fail_retries = 0
                         elapsed_time = self.current_run.completed_at - self.current_run.created_at
                         formatted_elapsed_time = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
                         print(f"Run completed in {formatted_elapsed_time}")
                         messages = self.client.beta.threads.messages.list(thread_id=self.thread_id)
                         return messages
+                    
+                    status = self.current_run.status
+                    if status in fail_states:
+                        self.fail_retries += 1
+                        if fail_case_prompt and self.fail_retries <= 3:
+                            print(f"Run failed with {status} state. Executing fail case prompt...")
+                            self.send_message(prompt=fail_case_prompt)
+                        else:
+                            raise Exception(f'Run failed with {status} state.')
                 except Exception as e:
                     raise Exception(f"An error occurred while retrieving the run: {e}")
                 print("Waiting for run to complete...")
@@ -158,7 +170,7 @@ The application should provide clear feedback for user actions (e.g., confirmati
 Routes:
 1. root endpoint for the single page: /
 
-Run Environment: Deployment on Vercel platform. Project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository.
+Run Environment: Deployment on Vercel platform. Project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository. vercel.json file is mandatory.
 
 Technical Requirements:
 1. Project should have all files and structures needed to be run at Vercel platform.

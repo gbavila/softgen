@@ -86,7 +86,7 @@ def save_llm_run_stats(
         manual_trigger: bool = False,
         success: bool = True,
         specs_proc_run: bool = False,
-        model: str = 'gpt-3.5-turbo-0125'
+        model: str = 'gpt-4o-mini'
         ) -> None:
     
     run_stats = {
@@ -140,7 +140,7 @@ def process_specs(software: Software) -> Software:
         software.id, 
         time_start,
         specs_proc_run=True,
-        model='gpt-3.5-turbo-0125'
+        model='gpt-4o-mini'
         )
 
     return software
