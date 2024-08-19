@@ -173,7 +173,7 @@ The application should provide clear feedback for user actions (e.g., confirmati
 Routes:
 1. root endpoint for the single page: /
 
-Run Environment: Deployment on Vercel platform. Project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository. vercel.json file is mandatory.
+Run Environment: Deployment on Vercel platform. Project should have all files and structure needed for Vercel to understand and deploy the page when integrating with github repository. vercel.json file is mandatory and should have only a single field with the framework of the following list if the chosen framework is in it: nextjs, nuxtjs, svelte, create-react-app, gatsby, remix, solidstart, sveltekit, blitzjs, astro, hexo, eleventy, docusaurus-2, docusaurus, preact, solidstart-1, dojo, ember, vue, scully, ionic-angular, angular, polymer, sveltekit-1, ionic-react, gridsome, umijs, sapper, saber, stencil, redwoodjs, hugo, jekyll, brunch, middleman, zola, hydrogen, vite, vitepress, vuepress, parcel, fasthtml, sanity, storybook.
 
 Technical Requirements:
 1. Project should have all files and structures needed to be run at Vercel platform.
@@ -181,4 +181,3 @@ Technical Requirements:
 3. Page should work in most browsers.
 
 """)
-# Not adding framework so it wont introduce a bias into the model
