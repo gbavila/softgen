@@ -144,8 +144,9 @@ def update_software_files(software_id, version):
         try:
             if not file.content:
                 git_manager.delete_file(repo_name, file.path, file.instructions, branch)
-            else:
-                # Adds if does not exist
+            elif file.version == 1: # Adds if does not exist
+                git_manager.create_file(repo_name, file.path, file.instructions, file.content, branch)
+            else: 
                 git_manager.update_file(repo_name, file.path, file.instructions, file.content, branch)
         except GithubException as e:
             print(f"Error updating/deleting file {file.path} in repository {repo_name}: {str(e)}")

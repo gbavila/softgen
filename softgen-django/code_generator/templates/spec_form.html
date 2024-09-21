@@ -11,14 +11,14 @@
         <h2>Web Generator</h2>
     </header>
     <div class="form-container">
-        <h1>Enviar Especificações</h1>
+        <h1>Send Specifications</h1>
         <form method="post">
             {% csrf_token %}
-            <label for="name">Nome do Projeto:</label><br>
+            <label for="name">Project Name:</label><br>
             <input type="text" id="name" name="name" required><br>
-            <label for="specs">Especificações:</label><br>
+            <label for="specs">Specifications:</label><br>
             <textarea id="specs" name="specs" required></textarea><br>
-            <input type="submit" value="Enviar">
+            <input type="submit" value="Send">
         </form>
     </div>
 </body>

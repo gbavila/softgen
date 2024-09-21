@@ -176,7 +176,7 @@ def update_software_task(
     next_run_version = runs.order_by('-run_number').first().run_number + 1
 
     if check_threshold:
-        threshold = 5
+        threshold = 8
         if next_run_version > threshold:
             print(f'Max re-generation retries reached ({threshold}).')
             return

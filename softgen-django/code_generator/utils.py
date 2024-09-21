@@ -120,7 +120,7 @@ def process_specs(software: Software) -> Software:
     {example_processed_specs}
     End of example.
     There is no need to strictly follow the example, but elements you should not modify from the example are:
-    - Deployment on vercel platform and everything related to it.
+    - Deployment on vercel platform and everything related to it, including the vercel.json format suggestion, with the natively supported frameworks list.
     - Choose a single framework, there should not be any database involved. Change framework if suited.
     """)
 
